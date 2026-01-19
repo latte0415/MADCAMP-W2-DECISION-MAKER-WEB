@@ -61,6 +61,7 @@
 }
 
 .eo-value {
+  padding-top: 2px;
   font-size: 17px;
 
   color: #111;
