@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useRef, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import * as authApi from "../api/auth";
 
 const AuthContext = createContext(null);
@@ -18,24 +18,29 @@ export function AuthProvider({ children }) {
     else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   }, []);
 
-  const bootstrap = useCallback(async () => {
-    setBootstrapping(true);
-    try {
-      const tokenRes = await authApi.refreshToken();
-      setAccessToken(tokenRes.access_token);
+  const refreshInFlight = useRef(null);
 
-      if (tokenRes.user) {
-        setUser(tokenRes.user);
-      } else {
-        const me = await authApi.me(tokenRes.access_token);
-        setUser(me);
+  const bootstrap = useCallback(async () => {
+    if (refreshInFlight.current) return refreshInFlight.current;
+
+    refreshInFlight.current = (async () => {
+      setBootstrapping(true);
+      try {
+        const tokenRes = await authApi.refreshToken();
+        setAccessToken(tokenRes.access_token);
+
+        if (tokenRes.user) setUser(tokenRes.user);
+        else setUser(await authApi.me(tokenRes.access_token));
+      } catch {
+        setAccessToken("");
+        setUser(null);
+      } finally {
+        setBootstrapping(false);
+        refreshInFlight.current = null;
       }
-    } catch {
-      setAccessToken("");
-      setUser(null);
-    } finally {
-      setBootstrapping(false);
-    }
+    })();
+
+    return refreshInFlight.current;
   }, [setAccessToken]);
 
   useEffect(() => {
@@ -80,6 +85,32 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   }, [setAccessToken]);
+  
+  const requestPasswordReset = useCallback(async (email) => {
+    // does not change auth state; just forwards backend message
+    return authApi.requestPasswordReset(email);
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (token, new_password) => {
+    return authApi.confirmPasswordReset(token, new_password);
+  }, []);
+
+  const setName = useCallback(
+    async (name) => {
+      if (!accessToken) throw new Error("Not authenticated");
+
+      // Update name
+      await authApi.updateMyName(name, accessToken);
+
+      // Refresh user so user.name is no longer null
+      const meRes = await authApi.me(accessToken);
+      setUser(meRes);
+
+      return meRes;
+    },
+    [accessToken] 
+  );
+
 
   const value = useMemo(
     () => ({
@@ -87,15 +118,19 @@ export function AuthProvider({ children }) {
       user,
       bootstrapping,
       isAuthed: !!accessToken,
+      needsName: !!accessToken && user?.name === null,
       refresh: bootstrap,
       login,
       signup,
       loginGoogle,
       logout,
-      setAccessToken, // optional; you can remove if you want
+      setAccessToken,
+      requestPasswordReset,
+      confirmPasswordReset,
+      setName,
       setUser,
     }),
-    [accessToken, user, bootstrapping, bootstrap, login, signup, loginGoogle, logout, setAccessToken]
+    [accessToken, user, bootstrapping, bootstrap, login, signup, loginGoogle, logout, setAccessToken, setName, requestPasswordReset, confirmPasswordReset]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

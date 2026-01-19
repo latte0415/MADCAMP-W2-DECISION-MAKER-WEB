@@ -5,7 +5,7 @@ import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { bootstrapping, isAuthed, login, loginGoogle } = useAuth();
+  const { bootstrapping, isAuthed, login, loginGoogle, user } = useAuth();
 
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -15,9 +15,10 @@ export default function LoginPage() {
   // If refresh succeeded during bootstrap, go Home
   useEffect(() => {
     if (!bootstrapping && isAuthed) {
-      navigate("/home", { replace: true });
+      if (user?.name === null) navigate("/init-name", { replace: true });
+      else navigate("/home", { replace: true });
     }
-  }, [bootstrapping, isAuthed, navigate]);
+  }, [bootstrapping, isAuthed, user, navigate]);
 
   const canSubmit = useMemo(() => {
     return email.trim() && pw.trim() && !loading && !bootstrapping;
@@ -28,8 +29,9 @@ export default function LoginPage() {
     setErrorMsg("");
     setLoading(true);
     try {
-      await login(email.trim(), pw);
-      navigate("/home", { replace: true });
+      const tokenRes = await login(email.trim(), pw);
+      const next = tokenRes?.user?.name === null ? "/init-name" : "/home";
+      navigate(next, { replace: true });
     } catch (err) {
       const defaultMsg = "로그인에 실패했습니다.";
       if (err?.status === 422) {
@@ -46,8 +48,9 @@ export default function LoginPage() {
     setErrorMsg("");
     setLoading(true);
     try {
-      await loginGoogle(idToken);
-      navigate("/home", { replace: true });
+      const tokenRes = await loginGoogle(idToken);
+      const next = tokenRes?.user?.name === null ? "/init-name" : "/home";
+      navigate(next, { replace: true });
     } catch (err) {
       const defaultMsg = "구글 로그인에 실패했습니다.";
       if (err?.status === 422) {
@@ -99,6 +102,10 @@ export default function LoginPage() {
             <div className="login-links-row">
               <Link className="login-link" to="/signup">
                 회원가입
+              </Link>
+
+              <Link className="login-link" to="/find-password">
+                비밀번호 찾기
               </Link>
             </div>
             <div className="login-divider" />

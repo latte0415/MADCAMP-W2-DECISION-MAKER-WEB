@@ -41,3 +41,25 @@ export function loginWithGoogleIdToken(id_token) {
     body: JSON.stringify({ id_token }),
   });
 }
+
+export function requestPasswordReset(email) {
+  return apiFetch("/auth/password-reset/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function confirmPasswordReset(token, new_password) {
+  return apiFetch("/auth/password-reset/confirm", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password }),
+  });
+}
+
+export function updateMyName(name, accessToken) {
+  return apiFetch("/auth/me/name", {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ name }),
+  });
+}

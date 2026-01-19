@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 export default function RequireAuth({ children }) {
-  const { isAuthed, bootstrapping } = useAuth();
+  const { isAuthed, bootstrapping, user } = useAuth();
   const location = useLocation();
 
   if (bootstrapping) {
@@ -14,5 +14,9 @@ export default function RequireAuth({ children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  if (user?.name === null && location.pathname !== "/init-name") {
+    return <Navigate to="/init-name" replace />;
+  }
+  
   return children;
 }

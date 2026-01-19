@@ -1,0 +1,431 @@
+.home-root {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.home-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+}
+
+.home-brand {
+  font-size: 32px;
+  font-weight: 500;
+}
+
+.home-actions {
+  display: flex;
+  gap: 14px;
+}
+
+/* Shared button class */
+.dm-btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 28px;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dm-btn--ghost {
+  background: transparent;
+  color: #000;
+  padding: 0 10px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.home-main {
+  padding: 0 28px 28px 28px;
+}
+
+.home-loading,
+.home-empty,
+.home-error {
+  padding: 12px 0;
+  font-size: 14px;
+}
+
+.home-error {
+  color: #c0392b;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.event-card {
+  width: 100%;
+  border: 2px solid #bfbfbf;
+  border-radius: 6px;
+  background: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+}
+
+.event-card:hover {
+  border-color: #9d9d9d;
+}
+
+.event-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.event-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.event-title {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-sub {
+  font-size: 13px;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 90px;
+}
+
+.event-code {
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.badge-admin {
+  background: #000;
+}
+
+.badge-pending {
+  background: #000;
+}
+
+.badge-rejected {
+  background: #7f1d1d;
+}
+
+/* Status pills (right side) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.status-waiting {
+  background: #6b7280; /* NOT_STARTED */
+}
+
+.status-progress {
+  background: #8a7b1f; /* IN_PROGRESS */
+}
+
+.status-paused {
+  background: #374151; /* PAUSED */
+}
+
+.status-finished {
+  background: #2e7d32; /* FINISHED */
+}
+
+.status-default {
+  background: #111;
+}
+
+/* Modal placeholder */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(720px, 96vw);
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 14px 16px;
+}
+
+.modal-pre {
+  background: #f6f6f6;
+  padding: 12px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+/* Button variants */
+.dm-btn--sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.dm-btn--outline {
+  background: #fff;
+  color: #000;
+  border: 1px solid #cfcfcf;
+}
+
+.dm-btn--disabledlike:disabled {
+  opacity: 0.5;
+}
+
+/* Keep modal within viewport and scroll inside */
+.ec-modal-card {
+  position: relative;
+  width: min(980px, 96vw);
+  max-height: min(86vh, 900px);   /* key: constrain height */
+  overflow: hidden;               /* prevent card itself from overflowing */
+  background: #fff;
+  border-radius: 10px;
+  border: 2px solid #4b87ff;
+  padding: 18px 18px 16px 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  display: flex;                  /* allow internal scroll section */
+  flex-direction: column;
+}
+
+/* Make the content inside scroll */
+.ec-modal-body {
+  overflow: auto;                 /* key: internal scrolling */
+  padding-right: 6px;             /* avoids scrollbar covering content */
+}
+
+/* Optional: keep close button always visible */
+.ec-close {
+  position: sticky;               /* stays visible while scrolling */
+  top: 0;
+  left: 0;
+  align-self: flex-start;
+  margin: -6px 0 6px -6px;
+  z-index: 2;
+
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+.ec-error {
+  margin: 4px 0 10px 0;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+.ec-section {
+  margin-top: 10px;
+}
+
+.ec-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 10px 0 8px 0;
+}
+
+.ec-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: start;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.ec-label {
+  font-weight: 600;
+  padding-top: 6px;
+}
+
+.ec-control {
+  min-width: 0;
+}
+
+.ec-input {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  padding: 0 10px;
+  outline: none;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.ec-input--small {
+  width: 88px;
+}
+
+.ec-input--code {
+  width: 110px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.ec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ec-hint {
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+  margin-top: 2px;
+}
+
+.ec-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ec-inline-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ec-code-msg {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.ec-code-msg.ok {
+  color: #2e7d32;
+}
+
+.ec-code-msg.bad {
+  color: #c0392b;
+}
+
+.ec-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.ec-create-btn {
+  width: 180px;
+}
+
+.ec-constraints {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+}
+
+/* Toggle (simple) */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #d1d5db;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.toggle input:checked + .toggle-slider {
+  background-color: #000;
+}
+
+.toggle input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+

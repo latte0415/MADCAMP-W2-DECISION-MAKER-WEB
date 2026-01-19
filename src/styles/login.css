@@ -98,7 +98,7 @@
 
 /* Links row aligned to the same width */
 .login-links-row {
-  width: 80%;
+  width: 85%;
   max-width: 520px;
   display: flex;
   justify-content: flex-end;
@@ -141,7 +141,7 @@
   transform: translateX(-50%);
   width: min(900px, 92vw);
 
-  background: #ef5b5b;
+  background: #e57373;
   color: #fff;
   border-radius: 6px;
   min-height: 44px;
@@ -168,4 +168,14 @@
   font-size: clamp(13px, 1.1vw, 16px);
   text-align: center;
   padding-right: 36px;
+}
+
+.login-banner-success {
+  background: #b8cc8b; 
+  color: #ffffff;
+}
+
+.login-banner-error {
+  background: #e57373; 
+  color: #ffffff;
 }
