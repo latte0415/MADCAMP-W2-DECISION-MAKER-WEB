@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useRef, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import * as authApi from "../api/auth";
+import { setAccessToken as setAccessTokenStore, clearAccessToken as clearAccessTokenStore } from "./tokenStore";
 
 const AuthContext = createContext(null);
 const ACCESS_TOKEN_KEY = "access_token";
@@ -13,9 +14,16 @@ export function AuthProvider({ children }) {
   const [bootstrapping, setBootstrapping] = useState(true);
 
   const setAccessToken = useCallback((token) => {
-    setAccessTokenState(token);
-    if (token) sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
-    else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    const t = token || "";
+    setAccessTokenState(t);
+
+    if (t) {
+      setAccessTokenStore(t);
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, t);
+    } else {
+      clearAccessTokenStore();
+      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
   }, []);
 
   const refreshInFlight = useRef(null);
@@ -30,7 +38,7 @@ export function AuthProvider({ children }) {
         setAccessToken(tokenRes.access_token);
 
         if (tokenRes.user) setUser(tokenRes.user);
-        else setUser(await authApi.me(tokenRes.access_token));
+        else setUser(await authApi.me());
       } catch {
         setAccessToken("");
         setUser(null);
@@ -62,6 +70,15 @@ export function AuthProvider({ children }) {
       const tokenRes = await authApi.signupWithEmail(email, password);
       setAccessToken(tokenRes.access_token);
       setUser(tokenRes.user ?? null);
+      return tokenRes;
+    },
+    [setAccessToken]
+  );
+
+  const refresh = useCallback(
+    async () => {
+      const tokenRes = await authApi.refreshToken();
+      setAccessToken(tokenRes.access_token);
       return tokenRes;
     },
     [setAccessToken]
@@ -100,7 +117,7 @@ export function AuthProvider({ children }) {
       if (!accessToken) throw new Error("Not authenticated");
 
       // Update name
-      await authApi.updateMyName(name, accessToken);
+      await authApi.updateMyName(name);
 
       // Refresh user so user.name is no longer null
       const meRes = await authApi.me(accessToken);
@@ -119,7 +136,7 @@ export function AuthProvider({ children }) {
       bootstrapping,
       isAuthed: !!accessToken,
       needsName: !!accessToken && user?.name === null,
-      refresh: bootstrap,
+      refresh,
       login,
       signup,
       loginGoogle,
@@ -130,7 +147,7 @@ export function AuthProvider({ children }) {
       setName,
       setUser,
     }),
-    [accessToken, user, bootstrapping, bootstrap, login, signup, loginGoogle, logout, setAccessToken, setName, requestPasswordReset, confirmPasswordReset]
+    [accessToken, user, bootstrapping, login, refresh, signup, loginGoogle, logout, setAccessToken, setName, requestPasswordReset, confirmPasswordReset]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

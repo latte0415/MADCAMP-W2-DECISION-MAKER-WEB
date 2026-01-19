@@ -1,0 +1,188 @@
+/* Keep modal within viewport and scroll inside */
+.ec-modal-card {
+  position: relative;
+  width: min(980px, 96vw);
+  max-height: min(86vh, 900px);   /* key: constrain height */
+  overflow: hidden;               /* prevent card itself from overflowing */
+  background: #fff;
+  border-radius: 10px;
+  border: 2px solid #4b87ff;
+  padding: 18px 18px 16px 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  display: flex;                  /* allow internal scroll section */
+  flex-direction: column;
+}
+
+/* Make the content inside scroll */
+.ec-modal-body {
+  overflow: auto;                 /* key: internal scrolling */
+  padding-right: 6px;             /* avoids scrollbar covering content */
+}
+
+/* Optional: keep close button always visible */
+.ec-close {
+  position: sticky;               /* stays visible while scrolling */
+  top: 0;
+  left: 0;
+  align-self: flex-start;
+  margin: -6px 0 6px -6px;
+  z-index: 2;
+
+  border: 0;
+  background: transparent;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+}
+
+.ec-error {
+  margin: 4px 0 10px 0;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+.ec-section {
+  margin-top: 10px;
+}
+
+.ec-section-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 10px 0 8px 0;
+}
+
+.ec-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: start;
+  gap: 10px;
+  margin: 15px 0px;
+}
+
+.ec-label {
+  font-weight: 480;
+  font-size: 18px;
+  padding-top: 0px;
+  padding-left: 18px;
+}
+
+.ec-control {
+  min-width: 0;
+}
+
+.ec-input {
+  width: 85%;
+  height: 28px;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  padding: 0 10px;
+  outline: none;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.ec-input--small {
+  width: 88px;
+}
+
+.ec-input--code {
+  width: 110px;
+  height: 30px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.ec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ec-hint {
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+  margin-top: 2px;
+}
+
+.ec-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ec-inline-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ec-code-msg {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.ec-code-msg.ok {
+  color: #2e7d32;
+}
+
+.ec-code-msg.bad {
+  color: #c0392b;
+}
+
+.ec-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.ec-create-btn {
+  width: 180px;
+  margin-right: 30px;
+}
+
+.ec-constraints {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+}
+
+.ec-section--vote .ec-row {
+  grid-template-columns: 320px 1fr; /* adjust: 320~450px */
+}
+
+/* Keep label text on a single line */
+.ec-section--vote .ec-label {
+  white-space: nowrap;
+}
+
+.ec-section--entry .ec-row {
+  grid-template-columns: 140px 1fr; /* adjust: 320~450px */
+}
+
+/* Keep label text on a single line */
+.ec-section--entry .ec-label {
+  white-space: nowrap;
+}
+
+.ec-label-sep {
+  display: inline-block;
+  margin-left: 6px; 
+  margin-right: 18px;
+}
+
+.ec-list-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ec-del-btn {
+  padding: 0 8px;      /* overrides dm-btn--ghost default padding if needed */
+  font-size: 18px;
+  line-height: 1;
+  height: 0px;        /* match .ec-input height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

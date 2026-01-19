@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import * as eventsApi from "../api/events";
-import { useAuth } from "../auth/AuthContext";
 
 const MAX_OPTIONS = 5;
 const MAX_ASSUMPTIONS = 10;
@@ -26,7 +25,7 @@ function FieldRow({ label, children }) {
   );
 }
 
-function ListEditor({ label, items, setItems, max, placeholder }) {
+function ListEditor({ label, items, setItems, max, placeholder, min = 0 }) {
   const canAdd = items.length < max;
 
   function updateAt(i, v) {
@@ -40,22 +39,50 @@ function ListEditor({ label, items, setItems, max, placeholder }) {
     setItems([...items, ""]);
   }
 
+  function removeAt(i) {
+    // enforce minimum length
+    if (items.length <= min) return;
+
+    const next = items.slice();
+    next.splice(i, 1);
+    setItems(next);
+  }
+
   return (
     <FieldRow label={label}>
       <div className="ec-list">
-        {items.map((v, i) => (
-          <input
-            key={i}
-            className="ec-input"
-            value={v}
-            placeholder={placeholder}
-            onChange={(e) => updateAt(i, e.target.value)}
-          />
-        ))}
+        {items.map((v, i) => {
+          const canDelete = items.length > min;
+          return (
+            <div key={i} className="ec-list-row">
+              <input
+                className="ec-input"
+                value={v}
+                placeholder={placeholder}
+                onChange={(e) => updateAt(i, e.target.value)}
+              />
+              {canDelete && i >= min && (
+                <button
+                type="button"
+                className="dm-btn dm-btn--ghost"
+                onClick={() => removeAt(i)}
+                disabled={!canDelete}
+                aria-label={`${label} ${i + 1} 삭제`}
+                title="삭제"
+              >
+                삭제
+              </button>
+              )}
+              
+            </div>
+          );
+        })}
 
         <button
           type="button"
-          className={`dm-btn dm-btn--outline dm-btn--sm ${!canAdd ? "dm-btn--disabledlike" : ""}`}
+          className={`dm-btn dm-btn--outline dm-btn--submit ${
+            !canAdd ? "dm-btn--disabledlike" : ""
+          }`}
           onClick={addOne}
           disabled={!canAdd}
         >
@@ -80,7 +107,6 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function EventCreationModal({ open, onClose, onCreated }) {
-  const { accessToken } = useAuth();
 
   const [subject, setSubject] = useState("");
 
@@ -156,7 +182,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
     setCodeCheck(null);
     setCodeCheckMsg("");
     try {
-      const data = await eventsApi.generateEntranceCode(accessToken);
+      const data = await eventsApi.generateEntranceCode();
       const code = toUpperAlnum6(data?.code || "");
       setEntranceCode(code);
       console.log("generated:", data);
@@ -174,7 +200,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
       return;
     }
     try {
-      const data = await eventsApi.checkEntranceCode(accessToken, entranceCode);
+      const data = await eventsApi.checkEntranceCode(entranceCode);
       setCodeCheck({ is_available: !!data?.is_available });
       setCodeCheckMsg(data?.is_available ? "사용 가능한 코드입니다." : "이미 사용 중인 코드입니다.");
     } catch (err) {
@@ -202,7 +228,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
         criteria: trimNonEmpty(criteria).slice(0, MAX_CRITERIA).map((content) => ({ content })),
       };
 
-      const created = await eventsApi.createEvent(accessToken, payload);
+      const created = await eventsApi.createEvent(payload);
       onCreated?.(created);
     } catch (err) {
       setErrorMsg(err?.message || "이벤트 생성에 실패했습니다.");
@@ -223,51 +249,60 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
         <div className="ec-modal-body">
           <div className="ec-section">
             <div className="ec-section-title">기본 정보</div>
-            <div style={{ paddingLeft: "22px" }}>
-              <FieldRow label="주제">
-                <input className="ec-input" value={subject} onChange={(e) => setSubject(e.target.value)} />
-              </FieldRow>
-              <div style={{ marginTop: 30 }} />
-              <ListEditor
-                label="선택지"
-                items={options}
-                setItems={setOptions}
-                max={MAX_OPTIONS}
-                placeholder=""
+            <FieldRow label="주제">
+              <input className="ec-input" value={subject} onChange={(e) => setSubject(e.target.value)} />
+            </FieldRow>
+            <div style={{ marginTop: 30 }} />
+            <ListEditor
+              label="선택지"
+              items={options}
+              setItems={setOptions}
+              min={2}
+              max={MAX_OPTIONS}
+              placeholder=""
+            />
+            <div style={{ marginTop: 30 }} />
+            <ListEditor
+              label="전제"
+              items={assumptions}
+              setItems={setAssumptions}
+              min={1}
+              max={MAX_ASSUMPTIONS}
+              placeholder=""
+            />
+            <div style={{ marginTop: 30 }} />
+            <ListEditor
+              label="기준"
+              items={criteria}
+              setItems={setCriteria}
+              min={1}
+              max={MAX_CRITERIA}
+              placeholder=""
+            />
+            <div style={{ marginTop: 30 }} />
+            <FieldRow label="최대 인원">
+              <input
+                className="ec-input ec-input--small"
+                type="number"
+                min={1}
+                value={maxMembership}
+                onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
               />
-              <div style={{ marginTop: 30 }} />
-              <ListEditor
-                label="전제"
-                items={assumptions}
-                setItems={setAssumptions}
-                max={MAX_ASSUMPTIONS}
-                placeholder=""
-              />
-              <div style={{ marginTop: 30 }} />
-              <ListEditor
-                label="기준"
-                items={criteria}
-                setItems={setCriteria}
-                max={MAX_CRITERIA}
-                placeholder=""
-              />
-              <div style={{ marginTop: 30 }} />
-              <FieldRow label="최대 인원">
-                <input
-                  className="ec-input ec-input--small"
-                  type="number"
-                  min={1}
-                  value={maxMembership}
-                  onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
-                />
-              </FieldRow>
-            </div>
+            </FieldRow>
           </div>
-          <div className="ec-section">
+          <div className="homepage-divider"/>
+          <div className="ec-section ec-section--vote">
             <div className="ec-section-title">투표 허용 정책</div>
-            <FieldRow label="전제 | 투표로 제안/편집 허용하기">
+            <FieldRow 
+              label={
+                <>
+                  전제 <span className="ec-label-sep">|</span> 투표로 제안/편집 허용하기
+                </>
+              }
+            >
               <div className="ec-inline">
                 <Toggle checked={assumptionAutoByVotes} onChange={setAssumptionAutoByVotes} />
+                <span style = {{display: "inline-block", width: "18px"}} />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
                   className="ec-input ec-input--small"
@@ -279,9 +314,16 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
                 />
               </div>
             </FieldRow>
-            <FieldRow label="기준 | 투표로 제안/편집 허용하기">
+            <FieldRow 
+              label={
+                <>
+                  기준 <span className="ec-label-sep">|</span> 투표로 제안/편집 허용하기
+                </>
+              }
+            >
               <div className="ec-inline">
                 <Toggle checked={criteriaAutoByVotes} onChange={setCriteriaAutoByVotes} />
+                <span style = {{display: "inline-block", width: "18px"}} />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
                   className="ec-input ec-input--small"
@@ -293,7 +335,13 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
                 />
               </div>
             </FieldRow>
-            <FieldRow label="결론 | 승인되는 동의 최소 퍼센티지">
+            <FieldRow 
+              label={
+                <>
+                  결론 <span className="ec-label-sep">|</span> 승인되는 동의 최소 퍼센티지
+                </>
+              }
+            >
               <input
                 className="ec-input ec-input--small"
                 type="number"
@@ -304,7 +352,8 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               />
             </FieldRow>
           </div>
-          <div className="ec-section">
+          <div className="homepage-divider"/>
+          <div className="ec-section ec-section--entry">
             <div className="ec-section-title">입장 정책</div>
             <FieldRow label="입장 코드">
               <div className="ec-inline">
@@ -341,7 +390,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
             </div>
             <div className="ec-constraints">
               <div>입장 코드는 6자리 대문자/숫자입니다.</div>
-              <div>선택지는 최소 2개, 최대 5개 입력하세요.</div>
+              <div>승인되는 동의 최소 퍼센티지는 1과 100 사이여아 합니다.</div>
             </div>
           </div>
         </div>

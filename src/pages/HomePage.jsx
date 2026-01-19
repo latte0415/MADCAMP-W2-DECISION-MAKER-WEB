@@ -2,9 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import EventCreationModal from "../components/EventCreationModal";
+import JoinEventModal from "../components/JoinEventModal";
+import EventOverviewModal from "../components/EventOverviewModal";
 import * as eventsApi from "../api/events";
+
+
 import "../styles/homepage.css";
+import "../styles/eventcreationmodal.css";
+import "../styles/joinmodal.css";
 import "../styles/global.css";
+import "../styles/eventoverview.css"
 
 function statusMeta(event_status) {
   switch (event_status) {
@@ -55,46 +62,85 @@ function ModalShell({ open, title, onClose, children }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { accessToken, logout } = useAuth();
+  const { bootstrapping, logout } = useAuth();
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
-  const [selectedEvent, setSelectedEvent] = useState(null); // for overview popup
-  const [createOpen, setCreateOpen] = useState(false); // create popup placeholder
-  const [joinOpen, setJoinOpen] = useState(false); // join popup placeholder
+  const [overviewEventId, setOverviewEventId] = useState(null); 
+  const [overview, setOverview] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewErr, setOverviewErr] = useState("");
+  const overviewOpen = !!overviewEventId;
+
+  function closeOverview() {
+  setOverviewEventId(null);
+}
+
+function enterEvent() {
+  if (!overviewEventId) return;
+  closeOverview();
+  navigate(`/event/${overviewEventId}`, { replace: true });
+}
+
+
+  const [createOpen, setCreateOpen] = useState(false); 
+  const [joinOpen, setJoinOpen] = useState(false); 
 
   const fetchEvents = useCallback(async () => {
-    if (!accessToken) return;
     setErrMsg("");
     try {
-      const data = await eventsApi.listParticipatedEvents(accessToken);
+      const data = await eventsApi.listParticipatedEvents();
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
+      if (err?.status === 401) {
+        return;
+      }
       setErrMsg(err?.message || "이벤트 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, []);
 
-  // initial fetch
   useEffect(() => {
+    if (bootstrapping) return;
     setLoading(true);
     fetchEvents();
-  }, [fetchEvents]);
+  }, [bootstrapping, fetchEvents]);
 
-  // polling
   useEffect(() => {
-    if (!accessToken) return;
+    if (bootstrapping) return;
 
-    const POLL_MS = 4000; // adjust as needed
-    const id = setInterval(() => {
-      fetchEvents();
-    }, POLL_MS);
-
+    const POLL_MS = 3000;
+    const id = setInterval(fetchEvents, POLL_MS);
     return () => clearInterval(id);
-  }, [accessToken, fetchEvents]);
+  }, [bootstrapping, fetchEvents]);
+
+  useEffect(() => {
+    if (!overviewEventId) return;
+
+    let alive = true;
+    setOverviewLoading(true);
+    setOverviewErr("");
+    setOverview(null);
+
+    (async () => {
+      try {
+        const data = await eventsApi.getEventOverview(overviewEventId);
+        if (alive) setOverview(data);
+      } catch (err) {
+        if (alive) setOverviewErr(err?.message || "이벤트 오버뷰를 불러오지 못했습니다.");
+      } finally {
+        if (alive) setOverviewLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [overviewEventId]);
+
 
   const emptyState = useMemo(() => !loading && !errMsg && events.length === 0, [loading, errMsg, events]);
 
@@ -118,7 +164,7 @@ export default function HomePage() {
 
       <main className="home-main">
         {errMsg && <div className="home-error">{errMsg}</div>}
-        {loading && <div className="home-loading">불러오는 중...</div>}
+        
 
         {emptyState && <div className="home-empty">참가한 이벤트가 없습니다.</div>}
 
@@ -132,7 +178,7 @@ export default function HomePage() {
               <button
                 key={ev.id}
                 className="event-card"
-                onClick={() => setSelectedEvent(ev)}
+                onClick={() => setOverviewEventId(ev.id)}
                 type="button"
               >
                 <div className="event-left">
@@ -160,19 +206,14 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Event overview placeholder */}
-      <ModalShell
-        open={!!selectedEvent}
-        title="이벤트 상세 (Placeholder)"
-        onClose={() => setSelectedEvent(null)}
-      >
-        <div style={{ fontSize: 13, lineHeight: 1.4 }}>
-          <div style={{ marginBottom: 12 }}>
-            여기에는 “이벤트 개요/참여자/상태/입장 코드” 등의 상세 UI가 들어갑니다.
-          </div>
-          <pre className="modal-pre">{JSON.stringify(selectedEvent, null, 2)}</pre>
-        </div>
-      </ModalShell>
+      <EventOverviewModal
+        open={!!overviewEventId}
+        overview={overview}
+        loading={overviewLoading}
+        errorMsg={overviewErr}
+        onClose={closeOverview}
+        onEnter={enterEvent}
+      />
 
       <EventCreationModal
         open={createOpen}
@@ -184,12 +225,19 @@ export default function HomePage() {
         }}
       />
 
-      {/* Join event placeholder */}
-      <ModalShell open={joinOpen} title="이벤트 참여 (Placeholder)" onClose={() => setJoinOpen(false)}>
-        <div style={{ fontSize: 13, lineHeight: 1.4 }}>
-          입장 코드 입력/참여 요청 UI는 이후 구현. (현재는 UI 자리만 잡음)
-        </div>
-      </ModalShell>
+      <JoinEventModal
+        open={joinOpen}
+        onClose={() => setJoinOpen(false)}
+        onJoined={(res) => {
+          // res: { message, event_id }
+          setJoinOpen(false);
+
+          if (res?.event_id) {
+            setOverviewEventId(res?.event_id);
+          };
+
+        }}
+      />
     </div>
   );
 }

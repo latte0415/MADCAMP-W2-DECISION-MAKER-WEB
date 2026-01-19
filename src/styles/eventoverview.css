@@ -1,0 +1,133 @@
+.eo-card {
+  width: min(900px, 92vw);
+  background: #fff;
+  border: 2px solid #bfbfbf;
+  border-radius: 6px;
+  padding: 16px 18px 14px 18px;
+  position: relative;
+}
+
+.eo-close {
+  position: sticky;               /* stays visible while scrolling */
+  top: 0;
+  left: 0;
+  align-self: flex-start;
+  margin: -6px 0 6px -6px;
+  z-index: 2;
+
+  border: 0;
+  background: transparent;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+}
+
+.eo-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-left: 18px; /* align after close button */
+  padding-right: 6px;
+}
+
+.eo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.eo-side {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 110px;
+  padding-right: 18px; 
+  padding-top: 7px;
+}
+
+.eo-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 10px;
+  margin: 15px 0;
+  align-items: start;
+}
+
+.eo-label {
+  font-weight: 480;
+  font-size: 20px;
+  padding-top: 0px;
+  padding-left: 10px;
+}
+
+.eo-value {
+  font-size: 17px;
+
+  color: #111;
+  min-width: 0;
+}
+
+.eo-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.eo-list-elt {
+  margin: 0;
+  padding-bottom: 7px;
+
+}
+
+
+.eo-muted {
+  color: rgba(0,0,0,0.45);
+}
+
+.eo-error {
+  margin: 8px 0 0 18px;
+  color: #c0392b;
+  font-size: 12px;
+}
+
+.eo-divider {
+  width: 0%;
+  height: 1px;
+  background: #bfbfbf;
+}
+
+.eo-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 15px 0 6px 0;
+}
+
+.eo-membership-msg {
+  font-weight: 480;
+  font-size: 25px;
+  color: #111;
+
+  margin-top: 0px; 
+  margin-bottom: 14px;
+}
+
+.eo-enter-btn {
+  position: absolute;
+  font-size: 18px;
+  height: 40px;
+
+  right: 0;
+  bottom: 100;
+  padding: 8px 20px;
+  border-radius: 6px;
+  margin-top: 5px; 
+  margin-bottom: 14px;
+  margin-right: 15px;
+}
+
+.eo-header {
+  display: flex;
+  justify-content: flex-start;
+  margin: -10px 0px 20px 25px; /* align with label padding-left */
+}

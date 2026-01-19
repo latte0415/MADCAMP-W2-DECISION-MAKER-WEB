@@ -31,6 +31,17 @@
   cursor: pointer;
 }
 
+.dm-btn--long {
+  width: 170px;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 28px;
+  background: #000;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+}
+
 .dm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -40,7 +51,7 @@
   background: transparent;
   color: #000;
   padding: 0 10px;
-  font-size: 22px;
+  font-size: 15px;
   line-height: 1;
 }
 
@@ -160,6 +171,15 @@
   color: #fff;
 }
 
+.status-pill--long {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 35px;
+  border-radius: 999px;
+  font-size: 16px;
+  color: #fff;
+}
+
 .status-waiting {
   background: #6b7280; /* NOT_STARTED */
 }
@@ -225,7 +245,14 @@
 }
 
 /* Button variants */
-.dm-btn--sm {
+.dm-btn--submit {
+  width: 85%;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.dm-btn--sm { 
   padding: 8px 14px;
   font-size: 13px;
   border-radius: 6px;
@@ -241,150 +268,6 @@
   opacity: 0.5;
 }
 
-/* Keep modal within viewport and scroll inside */
-.ec-modal-card {
-  position: relative;
-  width: min(980px, 96vw);
-  max-height: min(86vh, 900px);   /* key: constrain height */
-  overflow: hidden;               /* prevent card itself from overflowing */
-  background: #fff;
-  border-radius: 10px;
-  border: 2px solid #4b87ff;
-  padding: 18px 18px 16px 18px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-
-  display: flex;                  /* allow internal scroll section */
-  flex-direction: column;
-}
-
-/* Make the content inside scroll */
-.ec-modal-body {
-  overflow: auto;                 /* key: internal scrolling */
-  padding-right: 6px;             /* avoids scrollbar covering content */
-}
-
-/* Optional: keep close button always visible */
-.ec-close {
-  position: sticky;               /* stays visible while scrolling */
-  top: 0;
-  left: 0;
-  align-self: flex-start;
-  margin: -6px 0 6px -6px;
-  z-index: 2;
-
-  border: 0;
-  background: transparent;
-  font-size: 20px;
-  cursor: pointer;
-  color: #333;
-}
-
-.ec-error {
-  margin: 4px 0 10px 0;
-  color: #c0392b;
-  font-size: 13px;
-}
-
-.ec-section {
-  margin-top: 10px;
-}
-
-.ec-section-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 10px 0 8px 0;
-}
-
-.ec-row {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  align-items: start;
-  gap: 10px;
-  margin: 8px 0;
-}
-
-.ec-label {
-  font-weight: 600;
-  padding-top: 6px;
-}
-
-.ec-control {
-  min-width: 0;
-}
-
-.ec-input {
-  width: 100%;
-  height: 28px;
-  border: 1px solid #bdbdbd;
-  border-radius: 6px;
-  padding: 0 10px;
-  outline: none;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-.ec-input--small {
-  width: 88px;
-}
-
-.ec-input--code {
-  width: 110px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-}
-
-.ec-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ec-hint {
-  font-size: 12px;
-  color: rgba(0,0,0,0.45);
-  margin-top: 2px;
-}
-
-.ec-inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.ec-inline-label {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.ec-code-msg {
-  margin-top: 6px;
-  font-size: 12px;
-}
-
-.ec-code-msg.ok {
-  color: #2e7d32;
-}
-
-.ec-code-msg.bad {
-  color: #c0392b;
-}
-
-.ec-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-.ec-create-btn {
-  width: 180px;
-}
-
-.ec-constraints {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(0,0,0,0.45);
-}
 
 /* Toggle (simple) */
 .toggle {
@@ -427,5 +310,14 @@
 
 .toggle input:checked + .toggle-slider:before {
   transform: translateX(22px);
+}
+
+
+.homepage-divider {
+  width: 100%;
+  height: 1px;
+  background: #d9d9d9;
+
+  margin: 17px 0 15px 0;
 }
 
