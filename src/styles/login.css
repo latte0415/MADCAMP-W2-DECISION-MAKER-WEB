@@ -17,9 +17,9 @@
 
 /* Full viewport, centered */
 .login-root {
-  transform: scale(1.12);
+  transform: scale(0.9);
   transform-origin: center;
-  height: 90dvh;
+  height: 100dvh;
   width: 100%;
   background: #fff;
   display: grid;
@@ -98,7 +98,7 @@
 
 /* Links row aligned to the same width */
 .login-links-row {
-  width: 66%;
+  width: 80%;
   max-width: 520px;
   display: flex;
   justify-content: flex-end;
@@ -136,7 +136,7 @@
 /* Error banner stays at top */
 .login-error-banner {
   position: fixed;
-  top: 60px;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
   width: min(900px, 92vw);
