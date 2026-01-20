@@ -1,11 +1,15 @@
-export default function AssumptionsSection({ assumptions, creationProposals, autoByVotes, minVotes }) {
+export default function AssumptionsSection({
+  assumptions,
+  creationProposals,
+  autoByVotes,
+  minVotes,
+  onToggleVote,
+  isVoting,
+  onProposeModify,
+  onProposeDelete,
+}) {
   const list = Array.isArray(assumptions) ? assumptions : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
-
-  // Placeholder handlers (empty as requested)
-  function onProposeModify(assumption) {}
-  function onProposeDelete(assumption) {}
-  function onVoteToggle(proposal) {}
 
   function isPending(p) {
     return p?.proposal_status === "PENDING";
@@ -32,7 +36,8 @@ export default function AssumptionsSection({ assumptions, creationProposals, aut
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onVoteToggle(p)}
+          onClick={() => onToggleVote?.(p)}
+          disabled={isVoting?.(p?.id)}
         >
           {hasVoted ? "철회" : "동의"}
         </button>
@@ -81,14 +86,14 @@ export default function AssumptionsSection({ assumptions, creationProposals, aut
               <button
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
-                onClick={() => onProposeModify(a)}
+                onClick={() => onProposeModify?.(a, idx)}
               >
                 수정 제안
               </button>
               <button
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
-                onClick={() => onProposeDelete(a)}
+                onClick={() =>  onProposeDelete?.(a, idx)}
               >
                 삭제 제안
               </button>

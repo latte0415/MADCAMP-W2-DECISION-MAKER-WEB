@@ -55,3 +55,67 @@ export function retrieveAssumptionVote(eventId, proposalId) {
   if (!proposalId) throw new Error("proposalId is required");
   return apiFetchAuth(`/v1/events/${eventId}/assumption-proposals/${proposalId}/votes`, { method: "DELETE" });
 }
+
+export function castCriteriaVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria-proposals/${proposalId}/votes`, { method: "POST" });
+}
+
+export function retrieveCriteriaVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria-proposals/${proposalId}/votes`, { method: "DELETE" });
+}
+
+export function castConclusionVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/conclusion-proposals/${proposalId}/votes`, { method: "POST" });
+}
+
+export function retrieveConclusionVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/conclusion-proposals/${proposalId}/votes`, { method: "DELETE" });
+}
+
+export function createAssumptionProposal(eventId, payload) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/assumption-proposals`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createCriteriaProposal(eventId, payload) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria-proposals`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createConclusionProposal(eventId, criterionId, payload) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!criterionId) throw new Error("criterionId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria/${criterionId}/conclusion-proposals`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listCriteriaComments(eventId, criterionId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!criterionId) throw new Error("criterionId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria/${criterionId}/comments`, { method: "GET" });
+}
+
+export function createCriteriaComment(eventId, criterionId, payload) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!criterionId) throw new Error("criterionId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria/${criterionId}/comments`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

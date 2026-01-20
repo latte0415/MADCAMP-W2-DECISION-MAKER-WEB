@@ -1,0 +1,86 @@
+/* Bottom composer: sticky inside event-main scroll area */
+.pc-wrap {
+  position: sticky;
+  bottom: -0px;
+  z-index: 5;
+
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+
+  padding: 10px 12px;
+  margin-top: 14px;
+}
+
+.pc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pc-close {
+  padding: 0 8px;
+  font-size: 20px;
+}
+
+.pc-pills {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.pc-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 44px;
+  padding: 0 10px;
+
+  border: 1px solid #bdbdbd;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pc-body {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.pc-inputs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pc-textarea {
+  width: 100%;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 13px;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.pc-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.pc-submit {
+  height: 40px;
+  padding: 8px 18px;
+}
+
+.pc-error {
+  margin: 6px 0 6px 0;
+  color: #c0392b;
+  font-size: 12px;
+}
