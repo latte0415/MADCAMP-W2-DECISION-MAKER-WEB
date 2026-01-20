@@ -1,20 +1,34 @@
 /* ============================================
-   로그인 페이지 스타일 (미니멀 클린)
+   로그인 페이지 스타일 (완전히 새로 디자인)
    ============================================ */
 
 .login-root {
   height: 100dvh;
   width: 100%;
-  background: var(--color-bg-primary);
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
   display: grid;
   place-items: center;
   overflow: hidden;
+  position: relative;
+}
+
+.login-root::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(15, 23, 42, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(15, 23, 42, 0.03) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .login-card {
   width: 100%;
   height: 100%;
   position: relative;
+  z-index: 1;
 }
 
 .login-stack {
@@ -22,34 +36,43 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: var(--spacing-8);
-  padding: var(--spacing-6);
+  gap: var(--spacing-10);
+  padding: var(--spacing-8);
 }
 
 .login-title {
   margin: 0;
-  font-size: clamp(40px, 4vw, 64px);
+  font-size: clamp(48px, 5vw, 72px);
   text-align: center;
   letter-spacing: var(--letter-spacing-tight);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
+  background: linear-gradient(135deg, var(--color-neutral-900), var(--color-neutral-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .login-form {
-  width: clamp(380px, 42vw, 720px);
+  width: clamp(400px, 45vw, 560px);
   display: grid;
   justify-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-5);
+  background: var(--color-white);
+  padding: var(--spacing-10) var(--spacing-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border-light);
 }
 
 .login-input {
-  width: min(92%, 460px);
-  height: 52px;
-  border: 1px solid var(--color-border-light);
+  width: 100%;
+  height: 56px;
+  border: 2px solid var(--color-border-light);
   border-radius: var(--radius-lg);
-  padding: 0 var(--spacing-5);
-  font-size: var(--font-size-body);
+  padding: 0 var(--spacing-6);
+  font-size: var(--font-size-body-lg);
   font-family: var(--font-family-primary);
   color: var(--color-text-primary);
   background: var(--color-white);
@@ -61,8 +84,8 @@
 }
 
 .login-input:focus {
-  border-color: var(--color-neutral-600);
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
+  border-color: var(--color-neutral-900);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08), var(--shadow-md);
 }
 
 .login-input::placeholder {
@@ -71,71 +94,86 @@
 }
 
 .login-primary-btn {
-  margin-top: var(--spacing-5);
-  width: min(92%, 460px);
-  height: 52px;
+  margin-top: var(--spacing-2);
+  width: 100%;
+  height: 56px;
   border: none;
   border-radius: var(--radius-lg);
   background: var(--color-neutral-900);
   color: var(--color-white);
   font-size: var(--font-size-body-lg);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semi-bold);
   font-family: var(--font-family-primary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all var(--transition-smooth);
   letter-spacing: var(--letter-spacing-normal);
   line-height: 1.4;
+  box-shadow: var(--shadow-md);
 }
 
 .login-primary-btn:hover:not(:disabled) {
   background: var(--color-neutral-800);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .login-primary-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .login-primary-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .login-links-row {
-  width: 85%;
-  max-width: 520px;
+  width: 100%;
   display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-5);
-  margin-top: var(--spacing-2);
+  justify-content: center;
+  gap: var(--spacing-6);
+  margin-top: var(--spacing-4);
 }
 
 .login-link {
-  font-size: var(--font-size-body-sm);
+  font-size: var(--font-size-body);
   color: var(--color-text-secondary);
   text-decoration: none;
-  transition: color var(--transition-base);
-  font-weight: var(--font-weight-regular);
+  transition: all var(--transition-base);
+  font-weight: var(--font-weight-medium);
   line-height: var(--line-height-normal);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
 }
 
 .login-link:hover {
   color: var(--color-text-primary);
-  text-decoration: underline;
+  background: var(--color-neutral-50);
 }
 
 .login-divider {
   width: 100%;
-  max-width: 700px;
   height: 1px;
   background: var(--color-border-light);
-  margin: var(--spacing-3) 0;
+  margin: var(--spacing-6) 0;
+  position: relative;
+}
+
+.login-divider::before {
+  content: '또는';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-white);
+  padding: 0 var(--spacing-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-body-sm);
 }
 
 .login-subtle-note {
-  margin-top: var(--spacing-2);
+  margin-top: var(--spacing-4);
   font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
   text-align: center;
@@ -222,4 +260,36 @@
   justify-content: center;
   transform: scale(1.2);
   transform-origin: center;
+}
+
+/* 반응형 디자인 개선 */
+@media (max-width: 768px) {
+  .login-stack {
+    gap: var(--spacing-6);
+    padding: var(--spacing-4);
+  }
+  
+  .login-form {
+    width: 100%;
+    max-width: 100%;
+    padding: var(--spacing-8) var(--spacing-6);
+  }
+  
+  .login-title {
+    font-size: clamp(36px, 8vw, 56px);
+  }
+  
+  .login-input {
+    height: 52px;
+    font-size: var(--font-size-body);
+  }
+  
+  .login-primary-btn {
+    height: 52px;
+  }
+  
+  .login-links-row {
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
 }

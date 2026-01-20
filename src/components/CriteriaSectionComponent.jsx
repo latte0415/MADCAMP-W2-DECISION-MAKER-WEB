@@ -1,4 +1,102 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { ProposalAdminActions } from "./event/ProposalAdminActions";
+import * as commentsApi from "../api/comments";
+
+// 코멘트 아이템 컴포넌트 (수정/삭제 기능 포함)
+function CommentItem({ comment, eventId, currentUserId, criterionId, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment?.content || "");
+  const [deleting, setDeleting] = useState(false);
+
+  const isMyComment = currentUserId && comment?.created_by === currentUserId;
+
+  const handleEdit = async () => {
+    if (!eventId || !comment?.id) return;
+    if (!editContent.trim()) return;
+
+    setEditing(false);
+    try {
+      await commentsApi.updateComment(eventId, comment.id, { content: editContent.trim() });
+      onUpdate?.(criterionId);
+    } catch (err) {
+      alert(err?.message || "코멘트 수정에 실패했습니다.");
+      setEditContent(comment?.content || "");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!eventId || !comment?.id) return;
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+
+    setDeleting(true);
+    try {
+      await commentsApi.deleteComment(eventId, comment.id);
+      onUpdate?.(criterionId);
+    } catch (err) {
+      alert(err?.message || "코멘트 삭제에 실패했습니다.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="cr-comment">
+      <div className="cr-comment-head">
+        <span className="cr-comment-name">{comment?.creator?.name ?? "-"}</span>
+        {isMyComment && !editing && (
+          <div className="cr-comment-actions">
+            <button
+              type="button"
+              className="dm-btn dm-btn--xs dm-btn--ghost"
+              onClick={() => setEditing(true)}
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              className="dm-btn dm-btn--xs dm-btn--ghost"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </button>
+          </div>
+        )}
+      </div>
+      {editing ? (
+        <div className="cr-comment-edit">
+          <textarea
+            className="cr-comment-edit-input"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={3}
+          />
+          <div className="cr-comment-edit-actions">
+            <button
+              type="button"
+              className="dm-btn dm-btn--xs dm-btn--primary"
+              onClick={handleEdit}
+            >
+              저장
+            </button>
+            <button
+              type="button"
+              className="dm-btn dm-btn--xs dm-btn--outline"
+              onClick={() => {
+                setEditing(false);
+                setEditContent(comment?.content || "");
+              }}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="cr-comment-content">{comment?.content ?? ""}</div>
+      )}
+    </div>
+  );
+}
 
 export default function CriteriaSection({
   criteria,
@@ -11,6 +109,11 @@ export default function CriteriaSection({
   onOpenComposer,
   commentsByCriterionId,
   setOpenCriteriaIds,
+  isAdmin = false,
+  eventId,
+  onProposalStatusChange,
+  currentUserId,
+  onCommentUpdate,
 }) {
   const list = Array.isArray(criteria) ? criteria : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
@@ -145,6 +248,15 @@ export default function CriteriaSection({
                         </div>
 
                         {renderVoteArea(p)}
+                        {isAdmin && (
+                          <ProposalAdminActions
+                            eventId={eventId}
+                            proposalId={p?.id}
+                            proposalType="criteria"
+                            currentStatus={p?.proposal_status}
+                            onStatusChange={onProposalStatusChange}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -205,10 +317,11 @@ export default function CriteriaSection({
                 type="button"
                 className="cr-comments-toggle"
                 onClick={() => toggleComments(cid)}
+                aria-expanded={commentsOpen}
               >
-                <span className="cr-caret">{commentsOpen ? "v" : ">"}</span>
+                <span className="cr-caret">{commentsOpen ? "▼" : "▶"}</span>
                 <span className="ass-title">코멘트</span>
-                <span className="cr-comments-count"></span>
+                <span className="cr-comments-count">{comments.length > 0 ? `(${comments.length})` : ""}</span>
               </button>
 
               {commentsOpen && (
@@ -218,12 +331,14 @@ export default function CriteriaSection({
                   ) : (
                     <div className="cr-comments-list">
                       {comments.map((cm) => (
-                        <div key={cm?.id ?? cm?.created_at} className="cr-comment">
-                          <div className="cr-comment-head">
-                            <span className="cr-comment-name">{cm?.creator?.name ?? "-"}</span>
-                          </div>
-                          <div className="cr-comment-content">{cm?.content ?? ""}</div>
-                        </div>
+                        <CommentItem
+                          key={cm?.id ?? cm?.created_at}
+                          comment={cm}
+                          eventId={eventId}
+                          currentUserId={currentUserId}
+                          criterionId={cid}
+                          onUpdate={onCommentUpdate}
+                        />
                       ))}
                     </div>
                   )}
@@ -253,6 +368,15 @@ export default function CriteriaSection({
                     </div>
 
                     {status === "PENDING" ? renderConclusionVote(p) : null}
+                    {isAdmin && status === "PENDING" && (
+                      <ProposalAdminActions
+                        eventId={eventId}
+                        proposalId={p?.id}
+                        proposalType="conclusion"
+                        currentStatus={p?.proposal_status}
+                        onStatusChange={onProposalStatusChange}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -280,6 +404,15 @@ export default function CriteriaSection({
                   </div>
 
                 { renderVoteArea(p) }
+                {isAdmin && (
+                  <ProposalAdminActions
+                    eventId={eventId}
+                    proposalId={p?.id}
+                    proposalType="criteria"
+                    currentStatus={p?.proposal_status}
+                    onStatusChange={onProposalStatusChange}
+                  />
+                )}
                 </div>
               </div>
             </div>

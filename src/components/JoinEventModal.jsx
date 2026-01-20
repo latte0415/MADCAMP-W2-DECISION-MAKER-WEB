@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import * as eventsApi from "../api/events";
 
 function toUpperAlnum6(raw) {
@@ -16,6 +16,18 @@ export default function JoinEventModal({ open, onClose, onJoined }) {
   const [okMsg, setOkMsg] = useState("");
 
   const codeValid = useMemo(() => /^[A-Z0-9]{6}$/.test(code), [code]);
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -49,8 +61,17 @@ export default function JoinEventModal({ open, onClose, onJoined }) {
 
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="join-card">
+    <div 
+      className="modal-backdrop" 
+      role="dialog" 
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="join-card" onClick={(e) => e.stopPropagation()}>
         <button className="join-close" onClick={onClose} aria-label="Close">
           ×
         </button>

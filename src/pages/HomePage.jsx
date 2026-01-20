@@ -59,18 +59,38 @@ export default function HomePage() {
   const [overviewErr, setOverviewErr] = useState("");
 
   function closeOverview() {
-  setOverviewEventId(null);
-}
+    setOverviewEventId(null);
+    setOverview(null);
+    setOverviewErr("");
+  }
 
-function enterEvent() {
-  if (!overviewEventId) return;
-  closeOverview();
-  navigate(`/event/${overviewEventId}`, { replace: true });
-}
-
+  function enterEvent() {
+    if (!overviewEventId) return;
+    closeOverview();
+    navigate(`/event/${overviewEventId}`, { replace: true });
+  }
 
   const [createOpen, setCreateOpen] = useState(false); 
-  const [joinOpen, setJoinOpen] = useState(false); 
+  const [joinOpen, setJoinOpen] = useState(false);
+
+  // 모달이 열릴 때 다른 모달을 닫는 함수들
+  const handleOpenCreate = () => {
+    setJoinOpen(false);
+    setOverviewEventId(null);
+    setCreateOpen(true);
+  };
+
+  const handleOpenJoin = () => {
+    setCreateOpen(false);
+    setOverviewEventId(null);
+    setJoinOpen(true);
+  };
+
+  const handleOpenOverview = (eventId) => {
+    setCreateOpen(false);
+    setJoinOpen(false);
+    setOverviewEventId(eventId);
+  }; 
 
   const fetchEvents = useCallback(async () => {
     setErrMsg("");
@@ -134,60 +154,73 @@ function enterEvent() {
         <div className="home-brand">Decision Maker</div>
 
         <div className="home-actions">
-          <button className="dm-btn" onClick={logout}>
+          <button className="dm-btn dm-btn--outline" onClick={logout}>
             로그아웃
           </button>
-          <button className="dm-btn" onClick={() => setJoinOpen(true)}>
+          <button className="dm-btn" onClick={handleOpenJoin}>
             참여하기
           </button>
-          <button className="dm-btn" onClick={() => setCreateOpen(true)}>
+          <button className="dm-btn" onClick={handleOpenCreate}>
             생성하기
           </button>
         </div>
       </header>
 
       <main className="home-main">
-        {errMsg && <div className="home-error">{errMsg}</div>}
-        
-
-        {emptyState && <div className="home-empty">참가한 이벤트가 없습니다.</div>}
-
-        <div className="event-list">
-          {events.map((ev) => {
-            const adminBadge = adminBadgeMeta(ev.is_admin);
-            const membershipBadge = membershipBadgeMeta(ev.membership_status);
-            const st = statusMeta(ev.event_status);
-
-            return (
-              <button
-                key={ev.id}
-                className="event-card"
-                onClick={() => setOverviewEventId(ev.id)}
-                type="button"
-              >
-                <div className="event-left">
-                  <div className="event-title-row">
-                    {adminBadge && <span className={adminBadge.className}>{adminBadge.label}</span>}
-                    {membershipBadge && (
-                      <span className={membershipBadge.className}>{membershipBadge.label}</span>
-                    )}
-                    <div className="event-title">{ev.decision_subject}</div>
-                  </div>
-
-                  <div className="event-sub">
-                    <div>현재 참가 인원: {ev.participant_count}명</div>
-                    <div>관리자: {ev.admin_name}</div>
-                  </div>
-                </div>
-
-                <div className="event-right">
-                  <div className={st.className}>{st.label}</div>
-                  <div className="event-code">{ev.entrance_code}</div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="home-header-section">
+          <h1 className="home-header-title">내 이벤트</h1>
+          <p className="home-header-subtitle">참가 중인 의사결정 이벤트를 확인하고 관리하세요</p>
         </div>
+
+        {errMsg && <div className="home-error">{errMsg}</div>}
+
+        {emptyState && (
+          <div className="home-empty">
+            <p>참가한 이벤트가 없습니다.</p>
+            <p style={{ marginTop: 'var(--spacing-4)', fontSize: 'var(--font-size-body-sm)', color: 'var(--color-text-tertiary)' }}>
+              위의 "참여하기" 또는 "생성하기" 버튼을 사용하여 시작하세요.
+            </p>
+          </div>
+        )}
+
+        {!emptyState && (
+          <div className="event-list">
+            {events.map((ev) => {
+              const adminBadge = adminBadgeMeta(ev.is_admin);
+              const membershipBadge = membershipBadgeMeta(ev.membership_status);
+              const st = statusMeta(ev.event_status);
+
+              return (
+                <button
+                  key={ev.id}
+                  className="event-card"
+                  onClick={() => handleOpenOverview(ev.id)}
+                  type="button"
+                >
+                  <div className="event-left">
+                    <div className="event-title-row">
+                      {adminBadge && <span className={adminBadge.className}>{adminBadge.label}</span>}
+                      {membershipBadge && (
+                        <span className={membershipBadge.className}>{membershipBadge.label}</span>
+                      )}
+                      <h3 className="event-title">{ev.decision_subject}</h3>
+                    </div>
+
+                    <div className="event-sub">
+                      <div>참가 인원: {ev.participant_count}명</div>
+                      <div>관리자: {ev.admin_name}</div>
+                    </div>
+                  </div>
+
+                  <div className="event-right">
+                    <div className={st.className}>{st.label}</div>
+                    <div className="event-code">{ev.entrance_code}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       <EventOverviewModal
@@ -211,15 +244,20 @@ function enterEvent() {
 
       <JoinEventModal
         open={joinOpen}
-        onClose={() => setJoinOpen(false)}
+        onClose={() => {
+          setJoinOpen(false);
+        }}
         onJoined={(res) => {
           // res: { message, event_id }
           setJoinOpen(false);
-
+          
+          // 다른 모달을 먼저 닫고, 약간의 지연 후 overview 모달 열기
           if (res?.event_id) {
-            setOverviewEventId(res?.event_id);
-          };
-
+            // 상태 업데이트를 다음 틱으로 지연시켜 모달이 겹치지 않도록 함
+            setTimeout(() => {
+              handleOpenOverview(res.event_id);
+            }, 100);
+          }
         }}
       />
     </div>

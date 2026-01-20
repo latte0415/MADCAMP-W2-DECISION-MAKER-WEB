@@ -1,332 +1,788 @@
+/* ============================================
+   Event Page 스타일 (완전히 새로 디자인)
+   ============================================ */
+
 .event-root {
-  height: 100vh;              /* lock to viewport */
-  background: #ffffff;
+  height: 100vh;
+  background: var(--color-bg-secondary);
   display: flex;
-  flex-direction: column;     /* topbar + main */
-  overflow: hidden;  
+  flex-direction: column;
+  overflow: hidden;
 }
 
+/* 상단 바 - 더 세련된 디자인 */
 .event-topbar {
-  flex: 0 0 auto;             /* fixed height */
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
+  padding: var(--spacing-6) var(--spacing-10);
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-white);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .event-brand {
-  font-size: 32px;
-  font-weight: 500;
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-secondary);
+  color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
 }
 
 .event-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
 }
 
+/* 메인 콘텐츠 영역 - 더 넓은 여백 */
 .event-main {
-  flex: 1 1 auto;             /* take remaining height */
-  min-height: 0;              /* IMPORTANT for flex scrolling */
-  overflow-y: auto;           /* THIS makes it scroll */
-  padding: 0 28px 28px 28px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-10);
+  background: var(--color-bg-secondary);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  scroll-behavior: smooth;
+}
+
+/* 반응형 디자인 개선 */
+@media (max-width: 1024px) {
+  .event-main {
+    padding: var(--spacing-8) var(--spacing-6);
+  }
+  
+  .event-section {
+    padding: var(--spacing-6);
+  }
+}
+
+@media (max-width: 768px) {
+  .event-topbar {
+    padding: var(--spacing-4) var(--spacing-6);
+    flex-wrap: wrap;
+  }
+  
+  .event-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: var(--spacing-3);
+  }
+  
+  .event-main {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
+  
+  .event-section {
+    padding: var(--spacing-5);
+    margin-top: var(--spacing-6);
+  }
+  
+  .event-section-title {
+    font-size: var(--font-size-h3);
+  }
+  
+  .event-info-row {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+  
+  .ass-card {
+    grid-template-columns: 40px 1fr;
+    padding: var(--spacing-5);
+  }
+  
+  .ass-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--spacing-3);
+  }
+  
+  .ass-proposal-row {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+  
+  .ass-vote {
+    border-left: none;
+    border-top: 1px solid var(--color-border-light);
+    padding-left: 0;
+    padding-top: var(--spacing-3);
+    flex-direction: row;
+    justify-content: space-between;
+  }
 }
 
 .event-error {
-  padding: 12px 0;
-  font-size: 14px;
-  color: #c0392b;
+  padding: var(--spacing-5) var(--spacing-6);
+  font-size: var(--font-size-body);
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--color-error);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-6);
+  line-height: var(--line-height-normal);
 }
 
+/* 섹션 스타일 - 더 명확한 구분 */
 .event-section {
-  margin-top: 6px;
+  margin-top: var(--spacing-10);
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.event-section:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-base);
+}
+
+/* 섹션 간 구분선 개선 */
+.event-section + .event-section {
+  margin-top: var(--spacing-12);
+}
+
+.event-section + .ep-divider--long + .event-section {
+  margin-top: var(--spacing-10);
+}
+
+.event-section:first-of-type {
+  margin-top: 0;
 }
 
 .event-section-title {
-  font-size: 25px;
-  font-weight: 700;
-  margin: 8px 0 10px 0;
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--spacing-6) 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 2px solid var(--color-border-light);
+  position: relative;
 }
 
+.event-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--color-neutral-900);
+  border-radius: 1px;
+}
+
+/* 기본 정보 카드 - 더 세련된 레이아웃 */
 .event-info-card {
-  width: 70%;
-  border: 2px solid #bfbfbf;
-  border-radius: 6px;
-  background: #fff;
-  padding: 14px 16px;
+  width: 100%;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  padding: var(--spacing-7) var(--spacing-8);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.event-info-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-base);
 }
 
 .event-info-row {
   display: grid;
-  grid-template-columns: 70px 1fr;
-  gap: 12px;
-  margin: 8px 0;
+  grid-template-columns: 140px 1fr;
+  gap: var(--spacing-6);
+  margin: var(--spacing-5) 0;
   align-items: start;
 }
 
 .ep-divider {
-  width: 20%;
+  width: 100%;
   height: 1px;
-  margin: 15px 0;
-  background: #bfbfbf;
+  margin: var(--spacing-5) 0;
+  background: var(--color-border-light);
 }
+
 .ep-divider--long {
   width: 100%;
-  height: 3px;
-  margin: 20px 0;
-  background: #bfbfbf;
+  height: 2px;
+  margin: var(--spacing-10) 0;
+  background: linear-gradient(90deg, transparent, var(--color-border-light), transparent);
+  border: none;
 }
 
 .event-info-label {
-  font-size: 17px;
-  font-weight: 500;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
 }
 
 .event-info-value {
-  font-size: 17px;
+  font-size: var(--font-size-body-lg);
   min-width: 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
 }
 
 .event-muted {
-  color: rgba(0,0,0,0.45);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+  font-style: italic;
+}
+
+/* 로딩 상태 개선 */
+.event-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-12);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-lg);
+  gap: var(--spacing-4);
+}
+
+.event-loading::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--color-neutral-200);
+  border-top-color: var(--color-neutral-900);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .event-options {
   margin: 0;
-  padding-left: 18px;
+  padding-left: var(--spacing-6);
+  list-style: decimal;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .event-option {
-  margin: 2px 0;
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+  padding-left: var(--spacing-2);
 }
 
 .event-option-prefix {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
-/* Header row for section title + "추가하기" button */
+/* 섹션 헤더 - 제목과 버튼 */
 .event-section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 6px 0 10px 0;
+  margin: 0 0 var(--spacing-6) 0;
+  padding-bottom: var(--spacing-4);
+  border-bottom: 2px solid var(--color-border-light);
 }
 
-/* Assumptions list */
+/* ============================================
+   Assumptions & Criteria List - 완전히 새로 디자인
+   ============================================ */
+
 .ass-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-6);
 }
 
-/* Grey card per assumption */
+/* Card per assumption/criterion - 더 세련된 카드 디자인 */
 .ass-card {
-  margin-bottom: 12px; 
-  background: #d9d9d9;
-  border-radius: 6px;
-  padding: 10px 10px;
+  margin-bottom: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-7) var(--spacing-6);
   display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: 10px;
+  grid-template-columns: 48px 1fr auto;
+  gap: var(--spacing-6);
   align-items: start;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-smooth);
+  position: relative;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
 }
 
-/* Left number box */
+.ass-card:hover {
+  box-shadow: var(--shadow-xl);
+  border-color: var(--color-neutral-600);
+  transform: translateY(-3px);
+  background: var(--color-white);
+}
+
+.ass-card:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.ass-card--create {
+  border-style: dashed;
+  border-width: 2px;
+  background: var(--color-neutral-50);
+}
+
+/* Left number box - 더 큰 크기와 세련된 디자인 */
 .ass-num {
-  height: 28px;
-  border-radius: 6px;
-  background: #cfcfcf;
+  height: 48px;
+  width: 48px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-neutral-900), var(--color-neutral-700));
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-body-lg);
+  color: var(--color-white);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.ass-card:hover .ass-num {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-600));
 }
 
 .ass-body {
   min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
 }
 
 .ass-title {
-  font-size: 17px;
-  font-weight: 700;
-  margin-top: 0px;
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
-/* Right buttons */
+/* Right buttons - 더 나은 레이아웃 */
 .ass-actions {
   display: flex;
-  gap: 8px;
-  padding-top: 2px;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding-top: 0;
+  flex-shrink: 0;
+  align-items: flex-end;
 }
 
-/* Proposals under an assumption */
+/* Proposals under an assumption/criterion - 더 명확한 구분 */
 .ass-proposals {
-  margin-top: 8px;
+  margin-top: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-4);
 }
 
-/* Proposal row (white box inside grey card) */
+/* Proposal row - 더 세련된 스타일 */
 .ass-proposal-row {
-  background: #d9d9d9;
-  padding: 6px 0px;
-
-  display: inline-grid; /* <-- key: shrink-wrap to content */
-  grid-template-columns: 52px max-content max-content; /* tag | text | vote */
-  gap: 12px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5) var(--spacing-6);
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: var(--spacing-5);
   align-items: center;
+  width: 100%;
+  transition: all var(--transition-base);
+}
 
-  width: 50%;      /* don't overflow card */
+.ass-proposal-row:hover {
+  background: var(--color-neutral-100);
+  border-color: var(--color-neutral-600);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
+}
+
+.ass-proposal-row:active {
+  transform: translateX(2px);
 }
 
 .ass-tag {
-  border: 1px solid #bdbdbd;
-  background: #fff;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 700;
+  border: 1px solid var(--color-border-base);
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
   text-align: center;
   white-space: nowrap;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  box-shadow: var(--shadow-sm);
 }
 
 .ass-proposal-text {
-  padding-top: 0px;
-  font-size: 14px;
-  max-width: 700px;   /* tune for your layout */
+  padding-top: 0;
+  font-size: var(--font-size-body);
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .ass-proposal-content {
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-weight: var(--font-weight-semi-bold);
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
 }
 
 .ass-proposal-reason {
-  color: rgba(0,0,0,0.7);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-body-sm);
+  margin: 0;
 }
 
-/* Vote area on the right */
+/* Vote area on the right - 더 명확한 디자인 */
 .ass-vote {
-  padding-left: 30px;
+  padding-left: var(--spacing-4);
   display: flex;
-  align-items: center;
-  gap: 15px;
-  white-space: compact;
-  
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-2);
+  white-space: nowrap;
+  border-left: 1px solid var(--color-border-light);
+  padding-left: var(--spacing-5);
 }
 
 .ass-vote-count {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  min-width: 60px;
+  text-align: right;
 }
 
-/* extra small button variant */
-.dm-btn--xs {
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 6px;
-}
-/* comments + conclusion are separate boxes under the main criterion box */
+/* ============================================
+   Comments & Conclusion Boxes - 완전히 새로 디자인
+   ============================================ */
+
 .cr-comments-box,
 .cr-conclusion-box {
-  margin-bottom: 12px;
-  margin-left: 0;            /* align under ass-body (after number column) */
-  background: #fff;
-  border: 1px solid #cfcfcf;
-  border-radius: 8px;
+  margin-top: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  margin-left: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-smooth);
 }
 
-/* comments toggle row */
+.cr-comments-box:hover,
+.cr-conclusion-box:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-base);
+}
+
+/* Comments toggle row - 더 세련된 디자인 */
 .cr-comments-toggle {
   width: 100%;
   border: 0;
-  background: #fff;
-  padding: 10px 12px;
+  background: var(--color-white);
+  padding: var(--spacing-5) var(--spacing-6);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-4);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   text-align: left;
+  font-size: var(--font-size-body-lg);
+  color: var(--color-text-primary);
+  transition: all var(--transition-base);
 }
 
-.cr-caret { width: 18px; display: inline-flex; justify-content: center; }
-.cr-comments-count { color: rgba(0,0,0,0.55); }
+.cr-comments-toggle:hover {
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-900);
+}
+
+.cr-comments-toggle:active {
+  background: var(--color-neutral-100);
+}
+
+.cr-caret {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-body-lg);
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.cr-comments-toggle[aria-expanded="true"] .cr-caret {
+  transform: rotate(90deg);
+}
+
+.cr-comments-count {
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-body-sm);
+  margin-left: auto;
+}
 
 .cr-comments-body {
-  border-top: 1px solid #e2e2e2;
-  padding: 10px 12px;
+  border-top: 1px solid var(--color-border-light);
+  padding: var(--spacing-6);
+  background: var(--color-neutral-50);
 }
 
-.cr-comments-list { display: flex; flex-direction: column; gap: 10px; }
-.cr-comment-head { display: flex; gap: 10px; align-items: center; }
-.cr-comment-name { font-weight: 700; }
-.cr-comment-date { color: rgba(0,0,0,0.55); font-size: 12px; }
-.cr-comment-content { margin-top: 4px; }
+.cr-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
 
-/* conclusion box just needs padding; proposal row inside uses your ass-* styles */
-.cr-conclusion-box { padding: 10px 12px; }
+.cr-comment {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition-base);
+}
 
-/* conclusion row should not have the inner gray bar look */
+.cr-comment:hover {
+  border-color: var(--color-border-base);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.cr-comment-head {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.cr-comment-name {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.cr-comment-date {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}
+
+.cr-comment-content {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Conclusion box - 더 명확한 디자인 */
+.cr-conclusion-box {
+  padding: var(--spacing-6);
+}
+
+/* Conclusion row - plain style */
 .ass-proposal-row--plain {
   background: transparent;
+  border: none;
   padding: 0;
-  border: 0;
+  box-shadow: none;
+  max-width: 100%;
+  width: 100%;
+  gap: var(--spacing-6);
 }
 
-/* if your ass-proposal-row has border-radius/box-shadow, neutralize them too */
-.ass-proposal-row--plain {
-  border-radius: 0;
+.ass-proposal-row--plain:hover {
+  background: transparent;
+  border: none;
   box-shadow: none;
+  transform: none;
 }
 
 .conc-row {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: var(--spacing-6);
+  width: 100%;
 }
 
 .conc-text {
-  flex: 0 1 500px;
+  flex: 1;
   min-width: 0;
 }
 
 .conc-row .ass-vote {
   margin-left: 0;
   flex: 0 0 auto;
+  padding-left: var(--spacing-5);
+  border-left: 1px solid var(--color-border-light);
 }
 
-/* your tag: fixed size, never shrink */
+/* Conclusion tag - 더 큰 크기 */
 .ass-tag--conc {
   flex: 0 0 auto;
-  width: 70px;         /* consider increasing from 70 since you have “결론 | 채택됨” */
-  margin-right: 0;     /* remove the big margin-right; use gap instead */
-  border: 1px solid #bdbdbd;
-  background: #fff;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 700;
+  min-width: 100px;
+  margin-right: 0;
+  border: 1px solid var(--color-border-base);
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
   text-align: center;
   white-space: nowrap;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
-
-/* accepted conclusion box -> green background */
+/* Accepted conclusion box - 세련된 그린 톤 */
 .cr-conclusion-box--accepted {
-  background: #d8f5d8;     /* light green */
-  border: 1px solid #9fe09f;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  border: 2px solid rgba(16, 185, 129, 0.3);
 }
 
-/* keep the inside row clean (no gray inner bar) */
-.ass-proposal-row--plain {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  box-shadow: none;
+.cr-conclusion-box--accepted:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15), 0 4px 8px rgba(16, 185, 129, 0.1);
+}
+
+/* Extra small button variant */
+.dm-btn--xs {
+  padding: 6px 12px;
+  font-size: var(--font-size-caption);
+  border-radius: var(--radius-sm);
+}
+
+.dm-select {
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--color-border-base);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.dm-select:hover:not(:disabled) {
+  border-color: var(--color-neutral-600);
+}
+
+.dm-select:focus {
+  outline: none;
+  border-color: var(--color-neutral-900);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+.dm-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.proposal-admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.proposal-admin-buttons {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.dm-btn--success {
+  background: var(--color-success);
+  color: var(--color-white);
+  border: none;
+}
+
+.dm-btn--success:hover:not(:disabled) {
+  background: #059669;
+}
+
+.dm-btn--danger {
+  background: var(--color-error);
+  color: var(--color-white);
+  border: none;
+}
+
+.dm-btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.cr-comment-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-left: auto;
+}
+
+.cr-comment-edit {
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.cr-comment-edit-input {
+  width: 100%;
+  padding: var(--spacing-4);
+  border: 2px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-body);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: all var(--transition-base);
+}
+
+.cr-comment-edit-input:focus {
+  outline: none;
+  border-color: var(--color-neutral-900);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08), var(--shadow-sm);
+}
+
+.cr-comment-edit-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+  justify-content: flex-end;
 }

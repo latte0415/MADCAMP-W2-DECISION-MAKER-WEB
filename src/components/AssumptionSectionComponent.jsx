@@ -1,3 +1,5 @@
+import { ProposalAdminActions } from "./event/ProposalAdminActions";
+
 export default function AssumptionsSection({
   assumptions,
   creationProposals,
@@ -5,6 +7,9 @@ export default function AssumptionsSection({
   onToggleVote,
   isVoting,
   onOpenComposer,
+  isAdmin = false,
+  eventId,
+  onProposalStatusChange,
 }) {
   const list = Array.isArray(assumptions) ? assumptions : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
@@ -72,6 +77,15 @@ export default function AssumptionsSection({
                       </div>
 
                       {renderVoteArea(p)}
+                      {isAdmin && (
+                        <ProposalAdminActions
+                          eventId={eventId}
+                          proposalId={p?.id}
+                          proposalType="assumption"
+                          currentStatus={p?.proposal_status}
+                          onStatusChange={onProposalStatusChange}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -118,6 +132,15 @@ export default function AssumptionsSection({
                     </div>
 
                     {renderVoteArea(p)}
+                    {isAdmin && (
+                      <ProposalAdminActions
+                        eventId={eventId}
+                        proposalId={p?.id}
+                        proposalType="assumption"
+                        currentStatus={p?.proposal_status}
+                        onStatusChange={onProposalStatusChange}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

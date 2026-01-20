@@ -1,12 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import AssumptionsSection from "../components/AssumptionSectionComponent";
 import { VOTE_TARGETS } from "../utils/voteTargets";
 import { useOptimisticVoteToggle } from "../hooks/useOptimisticVoteToggle";
 import * as eventsApi from "../api/events";
+import * as votesApi from "../api/votes";
+import * as commentsApi from "../api/comments";
 import ProposalComposer from "../components/ProposalComposer";
 import CriteriaSection from "../components/CriteriaSectionComponent";
-import ModalShell from "../components/ModalShell";
+import VoteModal from "../components/event/VoteModal";
+import EventSettingModal from "../components/event/EventSettingModal";
+import MembershipManagementModal from "../components/event/MembershipManagementModal";
+import VoteResultDisplay from "../components/event/VoteResultDisplay";
 import { useProposalComposer } from "../hooks/useProposalComposer";
 
 import "../styles/eventpage.css";
@@ -32,6 +38,7 @@ function statusMeta(event_status) {
 export default function EventPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +48,31 @@ export default function EventPage() {
   const [commentsByCriterionId, setCommentsByCriterionId] = useState({}); // { [id]: Comment[] }
 
   const [voteOpen, setVoteOpen] = useState(false);
+  const [settingOpen, setSettingOpen] = useState(false);
+  const [membershipOpen, setMembershipOpen] = useState(false);
+  const [statusChanging, setStatusChanging] = useState(false);
+
+  // 모달이 열릴 때 다른 모달을 닫는 함수들
+  const handleOpenVote = () => {
+    setSettingOpen(false);
+    setMembershipOpen(false);
+    closeComposer(); // ProposalComposer도 닫기
+    setVoteOpen(true);
+  };
+
+  const handleOpenSetting = () => {
+    setVoteOpen(false);
+    setMembershipOpen(false);
+    closeComposer(); // ProposalComposer도 닫기
+    setSettingOpen(true);
+  };
+
+  const handleOpenMembership = () => {
+    setVoteOpen(false);
+    setSettingOpen(false);
+    closeComposer(); // ProposalComposer도 닫기
+    setMembershipOpen(true);
+  };
 
   const inFlightRef = useRef(false);
 
@@ -80,7 +112,7 @@ export default function EventPage() {
 
       commentsInFlightRef.current.add(criterionId);
       try {
-        const data = await eventsApi.listCriteriaComments(eventId, criterionId); 
+        const data = await commentsApi.listCriteriaComments(eventId, criterionId); 
         // data should be an array; normalize defensively
         setCommentsByCriterionId((prev) => ({
           ...prev,
@@ -99,8 +131,8 @@ export default function EventPage() {
     targets: VOTE_TARGETS.assumption,
     setDetail,
     setErrMsg,
-    castVoteApi: eventsApi.castAssumptionVote,
-    retrieveVoteApi: eventsApi.retrieveAssumptionVote,
+    castVoteApi: votesApi.castAssumptionVote,
+    retrieveVoteApi: votesApi.retrieveAssumptionVote,
   });
 
   const { toggleVote: toggleCriteriaVote, isVoting: isCriteriaVoting } = useOptimisticVoteToggle({
@@ -108,8 +140,8 @@ export default function EventPage() {
     targets: VOTE_TARGETS.criteria,
     setDetail,
     setErrMsg,
-    castVoteApi: eventsApi.castCriteriaVote,
-    retrieveVoteApi: eventsApi.retrieveCriteriaVote,
+    castVoteApi: votesApi.castCriteriaVote,
+    retrieveVoteApi: votesApi.retrieveCriteriaVote,
   });
 
   const { toggleVote: toggleConclusionVote, isVoting: isConclusionVoting } = useOptimisticVoteToggle({
@@ -117,8 +149,8 @@ export default function EventPage() {
     targets: VOTE_TARGETS.conclusion,
     setDetail,
     setErrMsg,
-    castVoteApi: eventsApi.castConclusionVote,
-    retrieveVoteApi: eventsApi.retrieveConclusionVote,
+    castVoteApi: votesApi.castConclusionVote,
+    retrieveVoteApi: votesApi.retrieveConclusionVote,
   });
 
 
@@ -162,6 +194,51 @@ export default function EventPage() {
   const subject = detail?.decision_subject ?? "";
   const options = Array.isArray(detail?.options) ? detail.options : [];
   const participantCount = Number.isFinite(detail?.current_participants_count) ? detail.current_participants_count : 0;
+  const isAdmin = detail?.is_admin ?? false;
+  const eventStatus = detail?.event_status;
+
+  // 이벤트 상태 변경 핸들러
+  const handleStatusChange = useCallback(
+    async (newStatus) => {
+      if (!eventId || !newStatus) return;
+
+      setStatusChanging(true);
+      setErrMsg("");
+
+      try {
+        await eventsApi.updateEventStatus(eventId, { status: newStatus });
+        await fetchDetail();
+      } catch (err) {
+        setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+      } finally {
+        setStatusChanging(false);
+      }
+    },
+    [eventId, fetchDetail]
+  );
+
+  // 상태 변경 가능한 옵션들
+  const statusOptions = useMemo(() => {
+    if (!eventStatus) return [];
+    const options = [];
+    switch (eventStatus) {
+      case "NOT_STARTED":
+        options.push({ value: "IN_PROGRESS", label: "진행 중" });
+        break;
+      case "IN_PROGRESS":
+        options.push({ value: "PAUSED", label: "일시정지" });
+        options.push({ value: "FINISHED", label: "종료" });
+        break;
+      case "PAUSED":
+        options.push({ value: "IN_PROGRESS", label: "재개" });
+        options.push({ value: "FINISHED", label: "종료" });
+        break;
+      case "FINISHED":
+        // FINISHED는 변경 불가
+        break;
+    }
+    return options;
+  }, [eventStatus]);
 
   return (
     <div className="event-root">
@@ -169,15 +246,43 @@ export default function EventPage() {
         <div className="event-brand">Decision Maker</div>
 
         <div className="event-actions">
-          <div className={st.className}>{st.label}</div>
+          {isAdmin && statusOptions.length > 0 && (
+            <select
+              className="dm-select"
+              value={eventStatus}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              disabled={statusChanging}
+            >
+              <option value={eventStatus}>{st.label}</option>
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          )}
+          {!isAdmin && <div className={st.className}>{st.label}</div>}
+
+          {isAdmin && (
+            <>
+              <button className="dm-btn" type="button" onClick={handleOpenSetting}>
+                설정
+              </button>
+              <button className="dm-btn" type="button" onClick={handleOpenMembership}>
+                멤버십 관리
+              </button>
+            </>
+          )}
 
           <button className="dm-btn" type="button" onClick={() => navigate("/home")}>
             나가기
           </button>
 
-          <button className="dm-btn" type="button" onClick={() => setVoteOpen(true)}>
-            투표하기
-          </button>
+          {eventStatus === "IN_PROGRESS" && (
+            <button className="dm-btn" type="button" onClick={handleOpenVote}>
+              투표하기
+            </button>
+          )}
         </div>
       </header>
 
@@ -185,7 +290,7 @@ export default function EventPage() {
         {errMsg && <div className="event-error">{errMsg}</div>}
 
         <section className="event-section">
-          <div className="event-section-title">기본 정보</div>
+          <h2 className="event-section-title">기본 정보</h2>
 
           <div className="event-info-card">
             <div className="event-info-row">
@@ -219,7 +324,7 @@ export default function EventPage() {
 
         <section className="event-section">
           <div className="event-section-head">
-            <div className="event-section-title">전제</div>
+            <h2 className="event-section-title">전제</h2>
             <button className="dm-btn dm-btn--sm" type="button" onClick={() => { openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null }); }}>
               추가하기
             </button>
@@ -233,12 +338,15 @@ export default function EventPage() {
             onToggleVote={toggleAssumptionVote}
             isVoting={isAssumptionVoting}
             onOpenComposer={openComposer}
+            isAdmin={detail?.is_admin}
+            eventId={eventId}
+            onProposalStatusChange={fetchDetail}
           />
         </section>
         <div className='ep-divider--long'/>
         <section className="event-section">
           <div className="event-section-head">
-            <div className="event-section-title">기준</div>
+            <h2 className="event-section-title">기준</h2>
             <button
               className="dm-btn dm-btn--sm"
               type="button"
@@ -260,8 +368,15 @@ export default function EventPage() {
             commentRefresh={commentRefresh}
             commentsByCriterionId={commentsByCriterionId}
             setOpenCriteriaIds={setOpenCriteriaIds}
+            isAdmin={detail?.is_admin}
+            eventId={eventId}
+            onProposalStatusChange={fetchDetail}
+            currentUserId={user?.id}
+            onCommentUpdate={fetchCommentsForCriterion}
           />
         </section>
+
+        <VoteResultDisplay eventId={eventId} eventStatus={eventStatus} />
 
         <ProposalComposer
           open={!!composer}
@@ -277,13 +392,40 @@ export default function EventPage() {
         />
       </main>
 
-      {/* Vote placeholder modal */}
-      <ModalShell open={voteOpen} title="투표하기 (Placeholder)" onClose={() => setVoteOpen(false)}>
-        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-          여기에는 “투표하기” UI가 들어갑니다. (임시 Placeholder)
-          <div style={{ marginTop: 10 }} />
-        </div>
-      </ModalShell>
+      <VoteModal
+        open={voteOpen}
+        eventId={eventId}
+        options={options}
+        criteria={detail?.criteria || []}
+        onClose={() => setVoteOpen(false)}
+        onSuccess={() => {
+          // 투표 성공 시 이벤트 상세 정보 새로고침
+          fetchDetail();
+        }}
+      />
+
+      {isAdmin && (
+        <>
+          <EventSettingModal
+            open={settingOpen}
+            eventId={eventId}
+            eventStatus={eventStatus}
+            onClose={() => setSettingOpen(false)}
+            onSuccess={() => {
+              fetchDetail();
+            }}
+          />
+
+          <MembershipManagementModal
+            open={membershipOpen}
+            eventId={eventId}
+            onClose={() => setMembershipOpen(false)}
+            onSuccess={() => {
+              fetchDetail();
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

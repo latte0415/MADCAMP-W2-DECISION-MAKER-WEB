@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import * as eventsApi from "../api/events";
+import * as proposalsApi from "../api/proposals";
+import * as commentsApi from "../api/comments";
 
 export function useProposalComposer({ eventId, fetchDetail }) {
   const [composer, setComposer] = useState(null);
@@ -49,10 +50,10 @@ export function useProposalComposer({ eventId, fetchDetail }) {
 
     try {
       if (composer.scope === "criteria" && composer.action === "comment") {
-        await eventsApi.createCriteriaComment(eventId, composer.targetId, { content });
+        await commentsApi.createCriteriaComment(eventId, composer.targetId, { content });
         bumpCommentRefresh(composer.targetId);
       } else if (composer.scope === "criteria" && composer.action === "conclusion") {
-        await eventsApi.createConclusionProposal(eventId, composer.targetId, { proposal_content: content });
+        await proposalsApi.createConclusionProposal(eventId, composer.targetId, { proposal_content: content });
         await fetchDetail();
       } else {
         const actionToCategory = { create: "CREATION", modify: "MODIFICATION", delete: "DELETION" };
@@ -60,14 +61,14 @@ export function useProposalComposer({ eventId, fetchDetail }) {
         const proposal_content = composer.action === "delete" ? null : content;
 
         if (composer.scope === "assumption") {
-          await eventsApi.createAssumptionProposal(eventId, {
+          await proposalsApi.createAssumptionProposal(eventId, {
             proposal_category,
             assumption_id: composer.action === "create" ? null : composer.targetId,
             proposal_content,
             reason,
           });
         } else if (composer.scope === "criteria") {
-          await eventsApi.createCriteriaProposal(eventId, {
+          await proposalsApi.createCriteriaProposal(eventId, {
             proposal_category,
             criteria_id: composer.action === "create" ? null : composer.targetId,
             proposal_content,

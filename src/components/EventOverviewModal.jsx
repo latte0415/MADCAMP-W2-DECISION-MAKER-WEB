@@ -1,17 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 
 function statusMeta(event_status) {
   switch (event_status) {
     case "NOT_STARTED":
-      return { label: "대기 중", className: "status-pill--long status-waiting" };
+      return { label: "대기 중", className: "status-pill status-pill--long status-waiting" };
     case "IN_PROGRESS":
-      return { label: "진행 중", className: "status-pill--long status-progress" };
+      return { label: "진행 중", className: "status-pill status-pill--long status-progress" };
     case "PAUSED":
-      return { label: "일시정지", className: "status-pill--long status-paused" };
+      return { label: "일시정지", className: "status-pill status-pill--long status-paused" };
     case "FINISHED":
-      return { label: "완료", className: "status-pill--long status-finished" };
+      return { label: "완료", className: "status-pill status-pill--long status-finished" };
     default:
-      return { label: event_status ?? "알 수 없음", className: "status-pill--long status-default" };
+      return { label: event_status ?? "알 수 없음", className: "status-pill status-pill--long status-default" };
   }
 }
 
@@ -58,9 +58,30 @@ export default function EventOverviewModal({
   const enterEnabled = !!overview?.can_enter;
   const membershipMsg = membershipMessage(overview?.membership_status);
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="eo-card">
+    <div 
+      className="modal-backdrop" 
+      role="dialog" 
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="eo-card" onClick={(e) => e.stopPropagation()}>
         <button className="eo-close" onClick={onClose} aria-label="Close">
           ×
         </button>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import * as eventsApi from "../api/events";
 
 const MAX_OPTIONS = 5;
@@ -237,22 +237,42 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
     }
   }
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="ec-modal-card">
+    <div 
+      className="modal-backdrop" 
+      role="dialog" 
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="ec-modal-card" onClick={(e) => e.stopPropagation()}>
         <button className="ec-close" onClick={onClose} aria-label="Close">
           ×
         </button>
 
-        {errorMsg && <div className="ec-error">{errorMsg}</div>}
-
         <div className="ec-modal-body">
+          {errorMsg && <div className="ec-error">{errorMsg}</div>}
           <div className="ec-section">
             <div className="ec-section-title">기본 정보</div>
             <FieldRow label="주제">
               <input className="ec-input" value={subject} onChange={(e) => setSubject(e.target.value)} />
             </FieldRow>
-            <div style={{ marginTop: 30 }} />
+            <div className="ec-spacer" />
             <ListEditor
               label="선택지"
               items={options}
@@ -261,7 +281,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               max={MAX_OPTIONS}
               placeholder=""
             />
-            <div style={{ marginTop: 30 }} />
+            <div className="ec-spacer" />
             <ListEditor
               label="전제"
               items={assumptions}
@@ -270,7 +290,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               max={MAX_ASSUMPTIONS}
               placeholder=""
             />
-            <div style={{ marginTop: 30 }} />
+            <div className="ec-spacer" />
             <ListEditor
               label="기준"
               items={criteria}
@@ -279,7 +299,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               max={MAX_CRITERIA}
               placeholder=""
             />
-            <div style={{ marginTop: 30 }} />
+            <div className="ec-spacer" />
             <FieldRow label="최대 인원">
               <input
                 className="ec-input ec-input--small"
@@ -302,7 +322,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
             >
               <div className="ec-inline">
                 <Toggle checked={assumptionAutoByVotes} onChange={setAssumptionAutoByVotes} />
-                <span style = {{display: "inline-block", width: "18px"}} />
+                <span className="ec-spacer-inline" />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
                   className="ec-input ec-input--small"
@@ -323,7 +343,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
             >
               <div className="ec-inline">
                 <Toggle checked={criteriaAutoByVotes} onChange={setCriteriaAutoByVotes} />
-                <span style = {{display: "inline-block", width: "18px"}} />
+                <span className="ec-spacer-inline" />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
                   className="ec-input ec-input--small"

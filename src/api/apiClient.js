@@ -6,6 +6,7 @@ import {
   getRefreshPromise,
   setRefreshPromise,
 } from "../auth/tokenStore";
+import { getIdempotencyKey } from "../utils/idempotency";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "";
 
@@ -83,14 +84,25 @@ async function refreshAccessToken() {
 }
 
 // Authenticated fetch: attaches Bearer, refreshes on 401, retries once
+// Idempotency-Key를 자동으로 추가합니다
 export async function apiFetchAuth(path, options = {}) {
   const url = buildUrl(path);
+  const method = options.method || "GET";
 
   const token = getAccessToken();
+  
+  // Idempotency-Key 확인 및 추가
+  const idempotencyKey = getIdempotencyKey(
+    url,
+    method,
+    options.idempotencyKey || options.headers?.["Idempotency-Key"]
+  );
+
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
   };
 
   // attempt 1
@@ -103,7 +115,24 @@ export async function apiFetchAuth(path, options = {}) {
   // normal success/failure (non-401)
   if (res.status !== 401) {
     const data = await parseJsonSafe(res);
-    if (!res.ok) throwHttpError(res, data);
+    if (!res.ok) {
+      // 409 Conflict 에러 처리 (Idempotency key reused 등)
+      if (res.status === 409) {
+        const detail = data?.detail || "";
+        if (detail.includes("Idempotency key reused")) {
+          const err = new Error("이미 처리된 요청입니다. 다른 요청에 같은 키를 사용할 수 없습니다.");
+          err.status = 409;
+          err.data = data;
+          throw err;
+        } else if (detail.includes("Request in progress")) {
+          const err = new Error("요청이 처리 중입니다. 잠시 후 다시 시도해주세요.");
+          err.status = 409;
+          err.data = data;
+          throw err;
+        }
+      }
+      throwHttpError(res, data);
+    }
     return data;
   }
 
@@ -113,7 +142,7 @@ export async function apiFetchAuth(path, options = {}) {
     throwHttpError(res, data);
   }
 
-  // refresh + retry once
+  // refresh + retry once (같은 Idempotency-Key 유지)
   const newToken = await refreshAccessToken();
 
   res = await fetch(url, {
@@ -123,10 +152,29 @@ export async function apiFetchAuth(path, options = {}) {
     headers: {
       ...headers,
       Authorization: `Bearer ${newToken}`,
+      // 재시도 시 같은 Idempotency-Key 사용
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
   });
 
   const data = await parseJsonSafe(res);
-  if (!res.ok) throwHttpError(res, data);
+  if (!res.ok) {
+    // 409 Conflict 에러 처리
+    if (res.status === 409) {
+      const detail = data?.detail || "";
+      if (detail.includes("Idempotency key reused")) {
+        const err = new Error("이미 처리된 요청입니다. 다른 요청에 같은 키를 사용할 수 없습니다.");
+        err.status = 409;
+        err.data = data;
+        throw err;
+      } else if (detail.includes("Request in progress")) {
+        const err = new Error("요청이 처리 중입니다. 잠시 후 다시 시도해주세요.");
+        err.status = 409;
+        err.data = data;
+        throw err;
+      }
+    }
+    throwHttpError(res, data);
+  }
   return data;
 }

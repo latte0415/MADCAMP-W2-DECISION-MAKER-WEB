@@ -1,0 +1,152 @@
+/* ============================================
+   투표 모달 스타일 (완전히 새로 디자인 - 컴팩트)
+   ============================================ */
+
+.vote-modal-content {
+  padding: var(--spacing-5);
+  min-width: 550px;
+  max-width: 700px;
+  width: 100%;
+}
+
+.vote-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.vote-section:last-child {
+  margin-bottom: 0;
+}
+
+.vote-section-title {
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--spacing-3) 0;
+  color: var(--color-text-primary);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 2px solid var(--color-neutral-900);
+}
+
+.vote-section-hint {
+  font-size: var(--font-size-body-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-4) 0;
+}
+
+.vote-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.vote-option-btn {
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--font-size-body);
+  transition: all var(--transition-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.vote-option-btn:hover {
+  border-color: var(--color-neutral-600);
+  background: var(--color-neutral-50);
+}
+
+.vote-option-btn--selected {
+  border-color: var(--color-neutral-900);
+  background: var(--color-neutral-900);
+  color: var(--color-white);
+  font-weight: var(--font-weight-bold);
+}
+
+.vote-option-btn--selected:hover {
+  background: var(--color-neutral-800);
+}
+
+.vote-criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.vote-criterion-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: move;
+  transition: all var(--transition-base);
+  gap: var(--spacing-4);
+}
+
+.vote-criterion-item:hover {
+  border-color: var(--color-neutral-600);
+  background: var(--color-neutral-50);
+}
+
+.vote-criterion-item--dragging {
+  opacity: 0.5;
+  border-color: var(--color-neutral-900);
+}
+
+.vote-criterion-handle {
+  font-size: 20px;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  user-select: none;
+}
+
+.vote-criterion-handle:active {
+  cursor: grabbing;
+}
+
+.vote-criterion-rank {
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-neutral-900);
+  color: var(--color-white);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-body-sm);
+}
+
+.vote-criterion-content {
+  flex: 1;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.vote-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .vote-modal-content {
+    min-width: auto;
+    padding: var(--spacing-4);
+  }
+  
+  .vote-option-btn {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+  
+  .vote-criterion-item {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+}
