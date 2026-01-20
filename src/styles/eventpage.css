@@ -43,7 +43,7 @@
 }
 
 .event-section-title {
-  font-size: 20px;
+  font-size: 25px;
   font-weight: 700;
   margin: 8px 0 10px 0;
 }
@@ -72,8 +72,8 @@
 }
 .ep-divider--long {
   width: 100%;
-  height: 1px;
-  margin: 8px 0;
+  height: 3px;
+  margin: 20px 0;
   background: #bfbfbf;
 }
 
@@ -121,6 +121,7 @@
 
 /* Grey card per assumption */
 .ass-card {
+  margin-bottom: 12px; 
   background: #d9d9d9;
   border-radius: 6px;
   padding: 10px 10px;
@@ -147,9 +148,9 @@
 }
 
 .ass-title {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
-  margin-top: 4px;
+  margin-top: 0px;
 }
 
 /* Right buttons */
@@ -192,7 +193,8 @@
 }
 
 .ass-proposal-text {
-  font-size: 13px;
+  padding-top: 0px;
+  font-size: 14px;
   max-width: 700px;   /* tune for your layout */
   min-width: 0;
 }
@@ -227,4 +229,104 @@
   font-size: 12px;
   border-radius: 6px;
 }
+/* comments + conclusion are separate boxes under the main criterion box */
+.cr-comments-box,
+.cr-conclusion-box {
+  margin-bottom: 12px;
+  margin-left: 0;            /* align under ass-body (after number column) */
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
+/* comments toggle row */
+.cr-comments-toggle {
+  width: 100%;
+  border: 0;
+  background: #fff;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
+
+.cr-caret { width: 18px; display: inline-flex; justify-content: center; }
+.cr-comments-count { color: rgba(0,0,0,0.55); }
+
+.cr-comments-body {
+  border-top: 1px solid #e2e2e2;
+  padding: 10px 12px;
+}
+
+.cr-comments-list { display: flex; flex-direction: column; gap: 10px; }
+.cr-comment-head { display: flex; gap: 10px; align-items: center; }
+.cr-comment-name { font-weight: 700; }
+.cr-comment-date { color: rgba(0,0,0,0.55); font-size: 12px; }
+.cr-comment-content { margin-top: 4px; }
+
+/* conclusion box just needs padding; proposal row inside uses your ass-* styles */
+.cr-conclusion-box { padding: 10px 12px; }
+
+/* conclusion row should not have the inner gray bar look */
+.ass-proposal-row--plain {
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
+/* if your ass-proposal-row has border-radius/box-shadow, neutralize them too */
+.ass-proposal-row--plain {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.conc-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.conc-text {
+  flex: 0 1 500px;
+  min-width: 0;
+}
+
+.conc-row .ass-vote {
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+/* your tag: fixed size, never shrink */
+.ass-tag--conc {
+  flex: 0 0 auto;
+  width: 70px;         /* consider increasing from 70 since you have “결론 | 채택됨” */
+  margin-right: 0;     /* remove the big margin-right; use gap instead */
+  border: 1px solid #bdbdbd;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+/* accepted conclusion box -> green background */
+.cr-conclusion-box--accepted {
+  background: #d8f5d8;     /* light green */
+  border: 1px solid #9fe09f;
+}
+
+/* keep the inside row clean (no gray inner bar) */
+.ass-proposal-row--plain {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}

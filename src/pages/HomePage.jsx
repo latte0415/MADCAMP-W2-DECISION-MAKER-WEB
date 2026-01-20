@@ -43,22 +43,7 @@ function adminBadgeMeta(is_admin) {
   return is_admin ? { label: "관리자", className: "badge badge-admin" } : null;
 }
 
-function ModalShell({ open, title, onClose, children }) {
-  if (!open) return null;
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card">
-        <div className="modal-header">
-          <div className="modal-title">{title}</div>
-          <button className="dm-btn dm-btn--ghost" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
+
 
 export default function HomePage() {
   const navigate = useNavigate();

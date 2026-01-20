@@ -6,7 +6,8 @@ import { useOptimisticVoteToggle } from "../hooks/useOptimisticVoteToggle";
 import * as eventsApi from "../api/events";
 import ProposalComposer from "../components/ProposalComposer";
 import CriteriaSection from "../components/CriteriaSectionComponent";
-
+import ModalShell from "../components/ModalShell";
+import { useProposalComposer } from "../hooks/useProposalComposer";
 
 import "../styles/eventpage.css";
 import "../styles/global.css";
@@ -28,46 +29,18 @@ function statusMeta(event_status) {
   }
 }
 
-
-function ModalShell({ open, title, onClose, children }) {
-  if (!open) return null;
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card">
-        <div className="modal-header">
-          <div className="modal-title">{title}</div>
-          <button className="dm-btn dm-btn--ghost" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
-
 export default function EventPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
 
   const [detail, setDetail] = useState(null);
-  const [setting, setSetting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
+  const [openCriteriaIds, setOpenCriteriaIds] = useState([]); // array of criterionId
+  const [commentsByCriterionId, setCommentsByCriterionId] = useState({}); // { [id]: Comment[] }
+
   const [voteOpen, setVoteOpen] = useState(false);
-
-  const [composer, setComposer] = useState(null); // null | { scope, action, targetIndex, targetId }
-  const [draftContent, setDraftContent] = useState("");
-  const [draftReason, setDraftReason] = useState("");
-  const [composerErr, setComposerErr] = useState("");
-  const [composerSubmitting, setComposerSubmitting] = useState(false);
-
-const [commentRefresh, setCommentRefresh] = useState(null); // { criterionId, nonce }
-
-const bumpCommentRefresh = useCallback((criterionId) => {
-  setCommentRefresh({ criterionId, nonce: Date.now() });
-}, []);
 
   const inFlightRef = useRef(false);
 
@@ -80,9 +53,7 @@ const bumpCommentRefresh = useCallback((criterionId) => {
 
     try {
       const data = await eventsApi.getEventDetail(eventId);
-      const setting = await eventsApi.getEventSetting(eventId);
       setDetail(data);
-      setSetting(setting);
     } catch (err) {
       setErrMsg(err?.message || "이벤트 정보를 불러오지 못했습니다.");
     } finally {
@@ -91,104 +62,36 @@ const bumpCommentRefresh = useCallback((criterionId) => {
     }
   }, [eventId]);
 
+    const {
+    composer, draftContent, draftReason,
+    composerErr, composerSubmitting,
+    openComposer, closeComposer, submitComposer,
+    setDraftContent, setDraftReason,
+    commentRefresh,
+  } = useProposalComposer({ eventId, fetchDetail });
 
-  const openComposer = useCallback((cfg) => {
-    setComposerErr("");
-    setComposer(cfg);
-    setDraftContent("");
-    setDraftReason("");
-  }, []);
 
-  const onAssumptionCreate = useCallback(() => {
-    openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null });
-  }, [openComposer]);
+  const commentsInFlightRef = useRef(new Set());
 
-  const onAssumptionModify = useCallback((assumption, idx) => {
-    openComposer({ scope: "assumption", action: "modify", targetIndex: idx, targetId: assumption?.id });
-  }, [openComposer]);
+  const fetchCommentsForCriterion = useCallback(
+    async (criterionId) => {
+      if (!eventId || !criterionId) return;
+      if (commentsInFlightRef.current.has(criterionId)) return;
 
-  const onAssumptionDelete = useCallback((assumption, idx) => {
-    openComposer({ scope: "assumption", action: "delete", targetIndex: idx, targetId: assumption?.id });
-  }, [openComposer]);
-
-  const closeComposer = useCallback(() => {
-    setComposer(null);
-    setComposerErr("");
-    setComposerSubmitting(false);
-    setDraftContent("");
-    setDraftReason("");
-  }, []);
-
-  const submitComposer = useCallback(async () => {
-    if (!composer || !eventId) return;
-
-    setComposerErr("");
-
-    const content = draftContent.trim();
-    const reason = draftReason.trim();
-
-    // Validation
-    if (composer.action === "comment" || composer.action === "conclusion") {
-      if (!content) return setComposerErr("내용을 입력하세요.");
-    } else if (composer.action === "delete") {
-      if (!reason) return setComposerErr("이유를 입력하세요.");
-    } else {
-      if (!content) return setComposerErr("작성할 내용을 입력하세요.");
-      if (!reason) return setComposerErr("이유를 입력하세요.");
-    }
-
-    setComposerSubmitting(true);
-
-    try {
-      // 1) Criteria comment
-      if (composer.scope === "criteria" && composer.action === "comment") {
-        await eventsApi.createCriteriaComment(eventId, composer.targetId, { content });
-        bumpCommentRefresh(composer.targetId);
-        // comments are not in detail; we'll trigger comment refresh below (Step 5)
+      commentsInFlightRef.current.add(criterionId);
+      try {
+        const data = await eventsApi.listCriteriaComments(eventId, criterionId); 
+        // data should be an array; normalize defensively
+        setCommentsByCriterionId((prev) => ({
+          ...prev,
+          [criterionId]: Array.isArray(data) ? data : [],
+        }));
+      } finally {
+        commentsInFlightRef.current.delete(criterionId);
       }
-
-      // 2) Criteria conclusion proposal
-      else if (composer.scope === "criteria" && composer.action === "conclusion") {
-        await eventsApi.createConclusionProposal(eventId, composer.targetId, { proposal_content: content });
-        await fetchDetail(); // conclusion proposals are in detail -> refresh immediately
-      }
-
-      // 3) Normal proposals: assumption/criteria create/modify/delete
-      else {
-        const actionToCategory = { create: "CREATION", modify: "MODIFICATION", delete: "DELETION" };
-        const proposal_category = actionToCategory[composer.action];
-
-        const proposal_content = composer.action === "delete" ? null : content;
-
-        if (composer.scope === "assumption") {
-          await eventsApi.createAssumptionProposal(eventId, {
-            proposal_category,
-            assumption_id: composer.action === "create" ? null : composer.targetId,
-            proposal_content,
-            reason,
-          });
-        } else if (composer.scope === "criteria") {
-          await eventsApi.createCriteriaProposal(eventId, {
-            proposal_category,
-            criteria_id: composer.action === "create" ? null : composer.targetId,
-            proposal_content,
-            reason,
-          });
-        } else {
-          throw new Error("Unknown proposal scope");
-        }
-
-        await fetchDetail(); // proposals live in detail
-      }
-
-      closeComposer();
-    } catch (err) {
-      setComposerErr(err?.message || "제안에 실패했습니다.");
-    } finally {
-      setComposerSubmitting(false);
-    }
-  }, [composer, eventId, draftContent, draftReason, fetchDetail, closeComposer]);
-
+    },
+    [eventId]
+  );
 
 
   const { toggleVote: toggleAssumptionVote, isVoting: isAssumptionVoting } = useOptimisticVoteToggle({
@@ -219,7 +122,6 @@ const bumpCommentRefresh = useCallback((criterionId) => {
   });
 
 
-
   // initial fetch on mount / eventId change
   useEffect(() => {
     setLoading(true);
@@ -227,7 +129,7 @@ const bumpCommentRefresh = useCallback((criterionId) => {
     fetchDetail();
   }, [fetchDetail]);
 
-  // polling every 3 seconds
+  // polling every 1.5 seconds
   useEffect(() => {
     if (!eventId) return;
 
@@ -239,20 +141,27 @@ const bumpCommentRefresh = useCallback((criterionId) => {
     return () => clearInterval(id);
   }, [eventId, fetchDetail]);
 
-  const st = useMemo(() => statusMeta(detail?.event_status), [detail]);
+  // comment polling.
+  useEffect(() => {
+    if (!eventId) return;
+    if (!openCriteriaIds || openCriteriaIds.length === 0) return;
 
+    // initial immediate fetch (so it doesn’t wait 1.5s)
+    openCriteriaIds.forEach((id) => fetchCommentsForCriterion(id));
+
+    const POLL_MS = 1500;
+    const id = setInterval(() => {
+      openCriteriaIds.forEach((id) => fetchCommentsForCriterion(id));
+    }, POLL_MS);
+
+    return () => clearInterval(id);
+  }, [eventId, openCriteriaIds, fetchCommentsForCriterion]);
+
+
+  const st = useMemo(() => statusMeta(detail?.event_status), [detail]);
   const subject = detail?.decision_subject ?? "";
   const options = Array.isArray(detail?.options) ? detail.options : [];
-  const assumptionAutoByVotes = !!setting?.assumption_is_auto_approved_by_votes;
-  const assumptionMinVotes = Number.isFinite(setting?.assumption_min_votes_required)
-    ? setting.assumption_min_votes_required
-    : 0;
-  const criteriaAutoByVotes = !!setting?.criteria_is_auto_approved_by_votes;
-  const criteriaMinVotes = Number.isFinite(setting?.criteria_min_votes_required)
-    ? setting.criteria_min_votes_required
-    : 0;
-
-  const participantCount = Number.isFinite(detail?.participant_count) ? detail.participant_count : 0;
+  const participantCount = Number.isFinite(detail?.current_participants_count) ? detail.current_participants_count : 0;
 
   return (
     <div className="event-root">
@@ -311,7 +220,7 @@ const bumpCommentRefresh = useCallback((criterionId) => {
         <section className="event-section">
           <div className="event-section-head">
             <div className="event-section-title">전제</div>
-            <button className="dm-btn dm-btn--sm" type="button" onClick={onAssumptionCreate}>
+            <button className="dm-btn dm-btn--sm" type="button" onClick={() => { openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null }); }}>
               추가하기
             </button>
           </div>
@@ -320,14 +229,13 @@ const bumpCommentRefresh = useCallback((criterionId) => {
           <AssumptionsSection
             assumptions={detail?.assumptions}
             creationProposals={detail?.assumption_creation_proposals}
-            autoByVotes={assumptionAutoByVotes}
-            minVotes={assumptionMinVotes}
+            participantCount={participantCount}
             onToggleVote={toggleAssumptionVote}
             isVoting={isAssumptionVoting}
-            onProposeModify={onAssumptionModify}
-            onProposeDelete={onAssumptionDelete}
+            onOpenComposer={openComposer}
           />
         </section>
+        <div className='ep-divider--long'/>
         <section className="event-section">
           <div className="event-section-head">
             <div className="event-section-title">기준</div>
@@ -341,18 +249,17 @@ const bumpCommentRefresh = useCallback((criterionId) => {
           </div>
 
           <CriteriaSection
-            eventId={eventId}
             criteria={detail?.criteria}
             creationProposals={detail?.criteria_creation_proposals}
-            autoByVotes={criteriaAutoByVotes}
-            minVotes={criteriaMinVotes}
             participantCount={participantCount}
-            onToggleVote={toggleCriteriaVote}
-            isVoting={isCriteriaVoting}
+            onToggleCriteriaVote={toggleCriteriaVote}
+            isCriteriaVoting={isCriteriaVoting}
             onToggleConclusionVote={toggleConclusionVote}
             isConclusionVoting={isConclusionVoting}
             onOpenComposer={openComposer}
             commentRefresh={commentRefresh}
+            commentsByCriterionId={commentsByCriterionId}
+            setOpenCriteriaIds={setOpenCriteriaIds}
           />
         </section>
 
@@ -375,7 +282,6 @@ const bumpCommentRefresh = useCallback((criterionId) => {
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           여기에는 “투표하기” UI가 들어갑니다. (임시 Placeholder)
           <div style={{ marginTop: 10 }} />
-          <pre className="modal-pre">{JSON.stringify(detail, null, 2)}</pre>
         </div>
       </ModalShell>
     </div>

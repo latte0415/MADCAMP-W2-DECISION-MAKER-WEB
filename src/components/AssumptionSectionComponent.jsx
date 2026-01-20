@@ -1,12 +1,10 @@
 export default function AssumptionsSection({
   assumptions,
   creationProposals,
-  autoByVotes,
-  minVotes,
+  participantCount,
   onToggleVote,
   isVoting,
-  onProposeModify,
-  onProposeDelete,
+  onOpenComposer,
 }) {
   const list = Array.isArray(assumptions) ? assumptions : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
@@ -23,15 +21,13 @@ export default function AssumptionsSection({
   }
 
   function renderVoteArea(p) {
-    if (!autoByVotes) return null;
-
     const voteCount = p?.vote_info?.vote_count ?? 0;
     const hasVoted = !!p?.vote_info?.has_voted;
 
     return (
       <div className="ass-vote">
         <div className="ass-vote-count">
-          {voteCount}/{minVotes}
+          {voteCount}/{participantCount}
         </div>
         <button
           type="button"
@@ -86,14 +82,14 @@ export default function AssumptionsSection({
               <button
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
-                onClick={() => onProposeModify?.(a, idx)}
+                onClick={() => onOpenComposer?.({ scope: "assumption", action: "modify", targetIndex: idx, targetId: a.id })}
               >
                 수정 제안
               </button>
               <button
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
-                onClick={() =>  onProposeDelete?.(a, idx)}
+                onClick={() =>  onOpenComposer?.({ scope: "assumption", action: "delete", targetIndex: idx, targetId: a.id })}
               >
                 삭제 제안
               </button>
@@ -101,7 +97,7 @@ export default function AssumptionsSection({
           </div>
         );
       })}
-      <div className='ep-divider--long'/>
+
       {/* Creation proposals appended after assumptions */}
       {creates
         .filter((p) => p?.proposal_status === "PENDING" && p?.proposal_category === "CREATION")
