@@ -8,11 +8,13 @@ import ProposalComposer from "../components/ProposalComposer";
 import CriteriaSection from "../components/CriteriaSectionComponent";
 import ModalShell from "../components/ModalShell";
 import { useProposalComposer } from "../hooks/useProposalComposer";
+import VoteModal from "../components/VoteModal";
 
 import "../styles/eventpage.css";
 import "../styles/global.css";
 import "../styles/proposalcomposer.css";
 import "../styles/homepage.css"; 
+import "../styles/votemodal.css";
 
 
 const STATUS_TRANSITIONS = {
@@ -507,13 +509,18 @@ export default function EventPage() {
         />
       </main>
 
-      {/* Vote placeholder modal */}
-      <ModalShell open={voteOpen} title="투표하기 (Placeholder)" onClose={() => setVoteOpen(false)}>
-        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-          여기에는 “투표하기” UI가 들어갑니다. (임시 Placeholder)
-          <div style={{ marginTop: 10 }} />
-        </div>
-      </ModalShell>
+      
+      <VoteModal
+        open={voteOpen}
+        eventId={eventId}
+        options={detail?.options}
+        criteria={detail?.criteria}
+        onClose={() => setVoteOpen(false)}
+        onSubmitted={() => {
+          // optional: refresh immediately instead of waiting for poll
+          fetchDetail?.();
+        }}
+      />
       <ModalShell open={settingsOpen} title="설정 (Placeholder)" onClose={() => setSettingsOpen(false)}>
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           여기에는 “설정” UI가 들어갑니다. (임시 Placeholder)

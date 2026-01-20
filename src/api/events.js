@@ -157,3 +157,16 @@ export function setEventStatus(eventId, status) {
     body: JSON.stringify({ status }),
   });
 }
+
+export function getMyVote(eventId) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/votes/me`, { method: "GET" });
+}
+
+export function submitVote(eventId, option_id, criterion_ids) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/votes`, {
+    method: "POST",
+    body: JSON.stringify({ option_id, criterion_ids }),
+  });
+}
