@@ -170,3 +170,8 @@ export function submitVote(eventId, option_id, criterion_ids) {
     body: JSON.stringify({ option_id, criterion_ids }),
   });
 }
+
+export function getVoteResult(eventId) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/votes/result`, { method: "GET" });
+}

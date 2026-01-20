@@ -67,6 +67,13 @@ export default function EventPage() {
   const [criteriaStatusBusy, setCriteriaStatusBusy] = useState({});
   const [conclusionStatusBusy, setConclusionStatusBusy] = useState({});
 
+  const [voteResult, setVoteResult] = useState(null);
+  const [voteResultErr, setVoteResultErr] = useState("");
+  const [voteResultLoading, setVoteResultLoading] = useState(false);
+
+  // ensures "fetch once" per eventId
+  const voteResultFetchedRef = useRef(false);
+
   const inFlightRef = useRef(false);
 
   const fetchDetail = useCallback(async () => {
@@ -319,6 +326,7 @@ export default function EventPage() {
   // polling every 1.5 seconds
   useEffect(() => {
     if (!eventId) return;
+    if (detail?.event_status !== "IN_PROGRESS") return;
 
     const POLL_MS = 1500;
     const id = setInterval(() => {
@@ -326,11 +334,12 @@ export default function EventPage() {
     }, POLL_MS);
 
     return () => clearInterval(id);
-  }, [eventId, fetchDetail]);
+  }, [eventId, fetchDetail, detail?.event_status]);
 
   // comment polling.
   useEffect(() => {
     if (!eventId) return;
+    if (detail?.event_status !== "IN_PROGRESS") return;
     if (!openCriteriaIds || openCriteriaIds.length === 0) return;
 
     // initial immediate fetch (so it doesn’t wait 1.5s)
@@ -342,9 +351,46 @@ export default function EventPage() {
     }, POLL_MS);
 
     return () => clearInterval(id);
-  }, [eventId, openCriteriaIds, fetchCommentsForCriterion]);
+  }, [eventId, openCriteriaIds, fetchCommentsForCriterion, detail?.event_status]);
 
+  useEffect(() => {
+    voteResultFetchedRef.current = false;
+    setVoteResult(null);
+    setVoteResultErr("");
+    setVoteResultLoading(false);
+  }, [eventId]);
 
+  useEffect(() => {
+    if (!eventId) return;
+    if (detail?.event_status !== "FINISHED") return;
+    if (voteResultFetchedRef.current) return;
+
+    voteResultFetchedRef.current = true;
+
+    (async () => {
+      setVoteResultLoading(true);
+      setVoteResultErr("");
+      try {
+        const res = await eventsApi.getVoteResult(eventId);
+        setVoteResult(res);
+      } catch (e) {
+        setVoteResultErr(e?.message || "투표 결과를 불러오지 못했습니다.");
+      } finally {
+        setVoteResultLoading(false);
+      }
+    })();
+  }, [eventId, detail?.event_status]);
+
+  const optionVoteCountById = useMemo(() => {
+    const m = new Map();
+    const rows = voteResult?.option_vote_counts;
+    if (Array.isArray(rows)) {
+      for (const r of rows) m.set(r?.option_id, r?.vote_count ?? 0);
+    }
+    return m;
+  }, [voteResult]);
+
+  const showResult = detail?.event_status === "FINISHED" && !!voteResult;
   const st = useMemo(() => statusMeta(detail?.event_status), [detail]);
   const subject = detail?.decision_subject ?? "";
   const options = Array.isArray(detail?.options) ? detail.options : [];
@@ -432,13 +478,33 @@ export default function EventPage() {
                   <ol className="event-options">
                     {options.map((opt, i) => (
                       <li key={opt.id ?? i} className="event-option">
-                        <span>{opt.content}</span>
+                        <span>
+                          {opt.content}
+                          {showResult ? <>{" \u00A0\u00A0\u00A0|\u00A0\u00A0"}{optionVoteCountById.get(opt.id) ?? 0}표</> : ""}
+                        </span>
                       </li>
                     ))}
                   </ol>
                 )}
               </div>
             </div>
+            {detail?.event_status === "FINISHED" && (
+              <>
+                <div className="ep-divider" />
+                <div className="event-info-row">
+                  <div className="event-info-label">투표자 수</div>
+                  <div className="event-info-value">
+                    {voteResultLoading ? (
+                      <span className="event-muted">불러오는 중...</span>
+                    ) : voteResult ? (
+                      `${voteResult.voted_participants_count ?? 0} / ${voteResult.total_participants_count ?? 0}`
+                    ) : (
+                      <span className="event-muted">{voteResultErr || "-"}</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
