@@ -72,7 +72,6 @@ export default function HomePage() {
   const [overview, setOverview] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewErr, setOverviewErr] = useState("");
-  const overviewOpen = !!overviewEventId;
 
   function closeOverview() {
   setOverviewEventId(null);

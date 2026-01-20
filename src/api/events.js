@@ -38,3 +38,20 @@ export function getEventDetail(eventId) {
   if (!eventId) throw new Error("eventId is required");
   return apiFetchAuth(`/v1/events/${eventId}`, { method: "GET" });
 }
+
+export function getEventSetting(eventId) {
+  if (!eventId) throw new Error("eventId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/setting`, { method: "GET" });
+}
+
+export function castAssumptionVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/assumption-proposals/${proposalId}/votes`, { method: "POST" });
+}
+
+export function retrieveAssumptionVote(eventId, proposalId) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/assumption-proposals/${proposalId}/votes`, { method: "DELETE" });
+}

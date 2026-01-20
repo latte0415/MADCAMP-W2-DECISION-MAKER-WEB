@@ -5,6 +5,11 @@
   border-radius: 6px;
   padding: 16px 18px 14px 18px;
   position: relative;
+
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;     /* cap overall modal height */
+  overflow: hidden;     /* prevent card itself from overflowing */
 }
 
 .eo-close {
@@ -28,6 +33,10 @@
   gap: 18px;
   padding-left: 18px; /* align after close button */
   padding-right: 6px;
+
+  overflow: auto;       /* scroll when content exceeds available height */
+  flex: 1 1 auto;       /* take remaining height inside eo-card */
+  min-height: 0;        /* IMPORTANT: enables flex child scrolling */
 }
 
 .eo-main {
@@ -91,7 +100,7 @@
 }
 
 .eo-divider {
-  width: 0%;
+  width: 15%;
   height: 1px;
   background: #bfbfbf;
 }
@@ -130,5 +139,6 @@
 .eo-header {
   display: flex;
   justify-content: flex-start;
-  margin: -10px 0px 20px 25px; /* align with label padding-left */
+  margin: 5px 0px 20px 25px; /* align with label padding-left */
 }
+
