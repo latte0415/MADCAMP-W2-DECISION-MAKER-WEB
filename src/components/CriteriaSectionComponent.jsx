@@ -11,6 +11,11 @@ export default function CriteriaSection({
   onOpenComposer,
   commentsByCriterionId,
   setOpenCriteriaIds,
+  isAdmin,
+  onAdminCriteriaDecision,
+  onAdminConclusionDecision,
+  criteriaStatusBusyById,
+  conclusionStatusBusyById
 }) {
   const list = Array.isArray(criteria) ? criteria : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
@@ -41,6 +46,62 @@ export default function CriteriaSection({
     });
   }, []);
 
+  function renderAdminDecisionButtons(p) {
+    if (!isAdmin) return null;
+    if (p?.proposal_status !== "PENDING") return null;
+
+    const busy = !!criteriaStatusBusyById?.[p?.id];
+
+    return (
+      <div className="admin-decision">
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminCriteriaDecision?.(p, "ACCEPTED")}
+          disabled={busy}
+        >
+          승인
+        </button>
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminCriteriaDecision?.(p, "REJECTED")}
+          disabled={busy}
+        >
+          거부
+        </button>
+      </div>
+    );
+  }
+  function renderConclusionAdminButtons(p) {
+    if (!isAdmin) return null;
+    if (p?.proposal_status !== "PENDING") return null;
+
+    const busy = !!conclusionStatusBusyById?.[p?.id];
+
+    return (
+      <div className="admin-decision">
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminConclusionDecision?.(p, "ACCEPTED")}
+          disabled={busy}
+        >
+          승인
+        </button>
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminConclusionDecision?.(p, "REJECTED")}
+          disabled={busy}
+        >
+          거부
+        </button>
+      </div>
+    );
+  }
+
+
   function renderVoteArea(p) {
 
     const voteCount = p?.vote_info?.vote_count ?? 0;
@@ -54,7 +115,10 @@ export default function CriteriaSection({
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onToggleVote?.(p)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVote?.(p);
+          }}
           disabled={isVoting?.(p?.id)}
         >
           {hasVoted ? "철회" : "동의"}
@@ -144,7 +208,10 @@ export default function CriteriaSection({
                           )}
                         </div>
 
-                        {renderVoteArea(p)}
+                        <div className="vote-and-admin">
+                          {renderVoteArea(p)}
+                          {renderAdminDecisionButtons(p)}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -252,7 +319,12 @@ export default function CriteriaSection({
                       <div className="ass-proposal-content">{p?.proposal_content ?? "-"}</div>
                     </div>
 
-                    {status === "PENDING" ? renderConclusionVote(p) : null}
+                    {status === "PENDING" 
+                    ? <div className="vote-and-admin">
+                        {renderConclusionVote(p)}
+                        {renderConclusionAdminButtons(p)}
+                      </div>
+                    : null}
                   </div>
                 </div>
               );
@@ -279,7 +351,10 @@ export default function CriteriaSection({
                     <div className="ass-proposal-reason">{p?.reason ?? "-"}</div>
                   </div>
 
-                { renderVoteArea(p) }
+                  <div className="vote-and-admin">
+                    {renderVoteArea(p)}
+                    {renderAdminDecisionButtons(p)}
+                  </div>
                 </div>
               </div>
             </div>

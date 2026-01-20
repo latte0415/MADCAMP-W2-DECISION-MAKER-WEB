@@ -330,3 +330,72 @@
   padding: 0;
   box-shadow: none;
 }
+
+.vote-and-admin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* admin buttons cluster */
+.admin-decision {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-dd {
+  position: relative;
+  display: inline-block;
+}
+
+.status-dd__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dd__caret {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.status-dd__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 5px;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  z-index: 50;
+
+  /* hidden by default; show on hover/focus-within */
+  display: none;
+}
+
+.status-dd:hover .status-dd__menu,
+.status-dd:focus-within .status-dd__menu {
+  display: block;
+}
+
+.status-dd__item {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.status-dd__item:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+.status-dd__item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

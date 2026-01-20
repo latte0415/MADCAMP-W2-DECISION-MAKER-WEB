@@ -5,6 +5,9 @@ export default function AssumptionsSection({
   onToggleVote,
   isVoting,
   onOpenComposer,
+  isAdmin,
+  onAdminDecision,
+  statusBusyById,
 }) {
   const list = Array.isArray(assumptions) ? assumptions : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
@@ -18,6 +21,34 @@ export default function AssumptionsSection({
     if (p?.proposal_category === "DELETION") return "삭제";
     if (p?.proposal_category === "CREATION") return "추가";
     return "제안";
+  }
+  
+  function renderAdminDecisionButtons(p) {
+    if (!isAdmin) return null;
+    if (p?.proposal_status !== "PENDING") return null;
+
+    const busy = !!statusBusyById?.[p?.id];
+
+    return (
+      <div className="admin-decision">
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminDecision?.(p, "ACCEPTED")}
+          disabled={busy}
+        >
+          승인
+        </button>
+        <button
+          type="button"
+          className="dm-btn dm-btn--outline dm-btn--xs"
+          onClick={() => onAdminDecision?.(p, "REJECTED")}
+          disabled={busy}
+        >
+          거부
+        </button>
+      </div>
+    );
   }
 
   function renderVoteArea(p) {
@@ -71,7 +102,10 @@ export default function AssumptionsSection({
                         )}
                       </div>
 
-                      {renderVoteArea(p)}
+                      <div className="vote-and-admin">
+                        {renderVoteArea(p)}
+                        {renderAdminDecisionButtons(p)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -117,7 +151,10 @@ export default function AssumptionsSection({
                       <div className="ass-proposal-reason">{p?.reason ?? "-"}</div>
                     </div>
 
-                    {renderVoteArea(p)}
+                    <div className="vote-and-admin">
+                      {renderVoteArea(p)}
+                      {renderAdminDecisionButtons(p)}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -14,6 +14,23 @@ import "../styles/global.css";
 import "../styles/proposalcomposer.css";
 import "../styles/homepage.css"; 
 
+
+const STATUS_TRANSITIONS = {
+  NOT_STARTED: ["IN_PROGRESS"],
+  IN_PROGRESS: ["PAUSED", "FINISHED"],
+  PAUSED: ["IN_PROGRESS", "FINISHED"],
+  FINISHED: [],
+};
+
+function actionLabel(from, to) {
+  // labels for the admin dropdown actions
+  if (from === "NOT_STARTED" && to === "IN_PROGRESS") return "시작";
+  if (from === "IN_PROGRESS" && to === "PAUSED") return "일시정지";
+  if (from === "PAUSED" && to === "IN_PROGRESS") return "재개";
+  if (to === "FINISHED") return "종료";
+  return "변경";
+}
+
 function statusMeta(event_status) {
   switch (event_status) {
     case "NOT_STARTED":
@@ -41,6 +58,12 @@ export default function EventPage() {
   const [commentsByCriterionId, setCommentsByCriterionId] = useState({}); // { [id]: Comment[] }
 
   const [voteOpen, setVoteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+
+  const [assumptionStatusBusy, setAssumptionStatusBusy] = useState({});
+  const [criteriaStatusBusy, setCriteriaStatusBusy] = useState({});
+  const [conclusionStatusBusy, setConclusionStatusBusy] = useState({});
 
   const inFlightRef = useRef(false);
 
@@ -91,6 +114,168 @@ export default function EventPage() {
       }
     },
     [eventId]
+  );
+
+  function patchAssumptionStatus(detail, proposalId, status) {
+    if (!detail) return detail;
+
+    const patchList = (arr) =>
+      Array.isArray(arr)
+        ? arr.map((p) => (p?.id === proposalId ? { ...p, proposal_status: status } : p))
+        : arr;
+
+    const assumptions = Array.isArray(detail.assumptions)
+      ? detail.assumptions.map((a) => ({
+          ...a,
+          proposals: patchList(a?.proposals),
+        }))
+      : detail.assumptions;
+
+    return {
+      ...detail,
+      assumptions,
+      assumption_creation_proposals: patchList(detail.assumption_creation_proposals),
+    };
+  }
+
+  function patchCriteriaStatus(detail, proposalId, status) {
+    if (!detail) return detail;
+
+    const patchList = (arr) =>
+      Array.isArray(arr)
+        ? arr.map((p) => (p?.id === proposalId ? { ...p, proposal_status: status } : p))
+        : arr;
+
+    const criteria = Array.isArray(detail.criteria)
+      ? detail.criteria.map((c) => ({
+          ...c,
+          proposals: patchList(c?.proposals),
+        }))
+      : detail.criteria;
+
+    return {
+      ...detail,
+      criteria,
+      criteria_creation_proposals: patchList(detail.criteria_creation_proposals),
+    };
+  }
+
+  function patchConclusionStatus(detail, proposalId, status) {
+    if (!detail) return detail;
+
+    const patchList = (arr) =>
+      Array.isArray(arr)
+        ? arr.map((p) => (p?.id === proposalId ? { ...p, proposal_status: status } : p))
+        : arr;
+
+    const criteria = Array.isArray(detail.criteria)
+      ? detail.criteria.map((c) => ({
+          ...c,
+          conclusion_proposals: patchList(c?.conclusion_proposals),
+        }))
+      : detail.criteria;
+
+    return { ...detail, criteria };
+  }
+
+  const setBusy = (setter, id, on) => {
+    setter((m) => {
+      const next = { ...m };
+      if (on) next[id] = true;
+      else delete next[id];
+      return next;
+    });
+  };
+
+  const onAdminAssumptionDecision = useCallback(
+    async (proposal, status) => {
+      const pid = proposal?.id;
+      if (!eventId || !pid) return;
+      if (assumptionStatusBusy[pid]) return;
+
+      setBusy(setAssumptionStatusBusy, pid, true);
+      setDetail((prev) => patchAssumptionStatus(prev, pid, status)); // optimistic
+
+      try {
+        await eventsApi.setAssumptionProposalStatus(eventId, pid, status);
+      } catch (err) {
+        setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+        await fetchDetail(); // revert by refetch
+      } finally {
+        setBusy(setAssumptionStatusBusy, pid, false);
+      }
+    },
+    [eventId, assumptionStatusBusy, fetchDetail]
+  );
+
+  const onAdminCriteriaDecision = useCallback(
+    async (proposal, status) => {
+      const pid = proposal?.id;
+      if (!eventId || !pid) return;
+      if (criteriaStatusBusy[pid]) return;
+
+      setBusy(setCriteriaStatusBusy, pid, true);
+      setDetail((prev) => patchCriteriaStatus(prev, pid, status)); // optimistic
+
+      try {
+        await eventsApi.setCriteriaProposalStatus(eventId, pid, status);
+      } catch (err) {
+        setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+        await fetchDetail();
+      } finally {
+        setBusy(setCriteriaStatusBusy, pid, false);
+      }
+    },
+    [eventId, criteriaStatusBusy, fetchDetail]
+  );
+
+  const onAdminConclusionDecision = useCallback(
+    async (proposal, status) => {
+      const pid = proposal?.id;
+      if (!eventId || !pid) return;
+      if (conclusionStatusBusy[pid]) return;
+
+      setBusy(setConclusionStatusBusy, pid, true);
+      setDetail((prev) => patchConclusionStatus(prev, pid, status)); // optimistic
+
+      try {
+        await eventsApi.setConclusionProposalStatus(eventId, pid, status);
+      } catch (err) {
+        setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+        await fetchDetail();
+      } finally {
+        setBusy(setConclusionStatusBusy, pid, false);
+      }
+    },
+    [eventId, conclusionStatusBusy, fetchDetail]
+  );
+
+
+  const [statusBusy, setStatusBusy] = useState(false);
+
+  const onChangeEventStatus = useCallback(
+    async (next) => {
+      if (!eventId || !next) return;
+      if (statusBusy) return;
+
+      const prev = detail?.event_status;
+
+      // optimistic update
+      setStatusBusy(true);
+      setDetail((d) => (d ? { ...d, event_status: next } : d));
+
+      try {
+        await eventsApi.setEventStatus(eventId, next);
+        // optional: fetchDetail(); // not required if polling soon, but fine to keep consistent
+      } catch (err) {
+        // revert
+        setDetail((d) => (d ? { ...d, event_status: prev } : d));
+        setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+      } finally {
+        setStatusBusy(false);
+      }
+    },
+    [eventId, statusBusy, detail?.event_status]
   );
 
 
@@ -162,6 +347,9 @@ export default function EventPage() {
   const subject = detail?.decision_subject ?? "";
   const options = Array.isArray(detail?.options) ? detail.options : [];
   const participantCount = Number.isFinite(detail?.current_participants_count) ? detail.current_participants_count : 0;
+  const isAdmin = !!detail?.is_admin;
+  const currentStatus = detail?.event_status ?? null;
+  const nextStatuses = currentStatus ? (STATUS_TRANSITIONS[currentStatus] || []) : [];
 
   return (
     <div className="event-root">
@@ -169,7 +357,37 @@ export default function EventPage() {
         <div className="event-brand">Decision Maker</div>
 
         <div className="event-actions">
-          <div className={st.className}>{st.label}</div>
+          {!isAdmin ? (
+            <div className={st.className}>{st.label}</div>
+          ) : (
+            <div className="status-dd">
+              <button
+                type="button"
+                className={st.className + " status-dd__btn"}
+                disabled={statusBusy || nextStatuses.length === 0}
+              >
+                {st.label}
+                <span className="status-dd__caret">▾</span>
+              </button>
+
+              {nextStatuses.length > 0 && (
+                <div className="status-dd__menu">
+                  {nextStatuses.map((ns) => (
+                    <button
+                      key={ns}
+                      type="button"
+                      className="status-dd__item"
+                      onClick={() => onChangeEventStatus(ns)}
+                      disabled={statusBusy}
+                    >
+                      {actionLabel(currentStatus, ns)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
 
           <button className="dm-btn" type="button" onClick={() => navigate("/home")}>
             나가기
@@ -178,6 +396,11 @@ export default function EventPage() {
           <button className="dm-btn" type="button" onClick={() => setVoteOpen(true)}>
             투표하기
           </button>
+          {isAdmin && (
+            <button className="dm-btn" type="button" onClick={() => setSettingsOpen(true)}>
+              설정
+            </button>
+          )}
         </div>
       </header>
 
@@ -225,7 +448,6 @@ export default function EventPage() {
             </button>
           </div>
 
-
           <AssumptionsSection
             assumptions={detail?.assumptions}
             creationProposals={detail?.assumption_creation_proposals}
@@ -233,6 +455,9 @@ export default function EventPage() {
             onToggleVote={toggleAssumptionVote}
             isVoting={isAssumptionVoting}
             onOpenComposer={openComposer}
+            isAdmin={isAdmin}
+            onAdminDecision={onAdminAssumptionDecision}
+            statusBusyById={assumptionStatusBusy}
           />
         </section>
         <div className='ep-divider--long'/>
@@ -252,14 +477,19 @@ export default function EventPage() {
             criteria={detail?.criteria}
             creationProposals={detail?.criteria_creation_proposals}
             participantCount={participantCount}
-            onToggleCriteriaVote={toggleCriteriaVote}
-            isCriteriaVoting={isCriteriaVoting}
+            onToggleVote={toggleCriteriaVote}
+            isVoting={isCriteriaVoting}
             onToggleConclusionVote={toggleConclusionVote}
             isConclusionVoting={isConclusionVoting}
             onOpenComposer={openComposer}
             commentRefresh={commentRefresh}
             commentsByCriterionId={commentsByCriterionId}
-            setOpenCriteriaIds={setOpenCriteriaIds}
+            setOpenCriteriaIds={setOpenCriteriaIds}  
+            isAdmin={isAdmin}
+            onAdminCriteriaDecision={onAdminCriteriaDecision}
+            onAdminConclusionDecision={onAdminConclusionDecision}
+            criteriaStatusBusyById={criteriaStatusBusy}
+            conclusionStatusBusyById={conclusionStatusBusy}
           />
         </section>
 
@@ -282,6 +512,11 @@ export default function EventPage() {
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           여기에는 “투표하기” UI가 들어갑니다. (임시 Placeholder)
           <div style={{ marginTop: 10 }} />
+        </div>
+      </ModalShell>
+      <ModalShell open={settingsOpen} title="설정 (Placeholder)" onClose={() => setSettingsOpen(false)}>
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+          여기에는 “설정” UI가 들어갑니다. (임시 Placeholder)
         </div>
       </ModalShell>
     </div>

@@ -119,3 +119,41 @@ export function createCriteriaComment(eventId, criterionId, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function setAssumptionProposalStatus(eventId, proposalId, status) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/assumption-proposals/${proposalId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+// PATCH /v1/events/{event_id}/criteria-proposals/{proposal_id}/status
+export function setCriteriaProposalStatus(eventId, proposalId, status) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/criteria-proposals/${proposalId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+// PATCH /v1/events/{event_id}/conclusion-proposals/{proposal_id}/status
+export function setConclusionProposalStatus(eventId, proposalId, status) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!proposalId) throw new Error("proposalId is required");
+  return apiFetchAuth(`/v1/events/${eventId}/conclusion-proposals/${proposalId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function setEventStatus(eventId, status) {
+  if (!eventId) throw new Error("eventId is required");
+  if (!status) throw new Error("status is required");
+  return apiFetchAuth(`/v1/events/${eventId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
