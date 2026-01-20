@@ -1,0 +1,45 @@
+/* fixed top banner, centered */
+.event-banner {
+  position: fixed;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, 92vw);
+
+  border-radius: 6px;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  padding: 8px 12px 8px 8px;
+  z-index: 9999;
+
+  color: #fff;
+}
+
+/* variants */
+.event-banner--error {
+  background: #e57373; /* same as login */
+}
+
+.event-banner--success {
+  background: #b8cc8b; /* same as login success */
+}
+
+.event-banner-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.event-banner-text {
+  font-size: clamp(13px, 1.1vw, 16px);
+  text-align: center;
+  padding-right: 36px;
+}

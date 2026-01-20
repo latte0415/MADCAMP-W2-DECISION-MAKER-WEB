@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import * as eventsApi from "../api/events";
+import EventErrorBanner from "../components/EventErrorBanner";
+
 import "../styles/votemodal.css";
 
 function normalizeCriteria(criteria) {
@@ -237,7 +239,7 @@ export default function VoteModal({
           </div>
         </div>
 
-        {errMsg && <div className="vm-error">{errMsg}</div>}
+        <EventErrorBanner message={errMsg} onClose={() => setErrMsg("")} />
 
         <div className="vm-footer">
           <button

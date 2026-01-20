@@ -88,6 +88,8 @@ export function useProposalComposer({ eventId, fetchDetail }) {
     }
   }, [composer, eventId, draftContent, draftReason, fetchDetail, bumpCommentRefresh, closeComposer]);
 
+  const clearComposerError = useCallback(() => setComposerErr(""), []);
+
   return {
     composer,
     draftContent,
@@ -97,6 +99,7 @@ export function useProposalComposer({ eventId, fetchDetail }) {
     openComposer,
     closeComposer,
     submitComposer,
+    clearComposerError,
     setDraftContent,
     setDraftReason,
     commentRefresh,

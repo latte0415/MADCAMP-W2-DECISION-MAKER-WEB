@@ -399,3 +399,21 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.ec-member-input {
+  width: 240px;          /* shorter horizontally */
+  max-width: 240px;
+  height: 44px;          /* thicker (taller) */
+  border-radius: 10px;
+  font-size: 16px;       /* bigger font */
+  font-weight: 700;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+
+/* If the id is long, keep it neat */
+.ec-member-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

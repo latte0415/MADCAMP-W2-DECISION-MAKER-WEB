@@ -175,3 +175,40 @@ export function getVoteResult(eventId) {
   if (!eventId) throw new Error("eventId is required");
   return apiFetchAuth(`/v1/events/${eventId}/votes/result`, { method: "GET" });
 }
+
+export function patchEvent(eventId, payload) {
+  return apiFetchAuth(`/v1/events/${eventId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listEventMemberships(eventId) {
+  return apiFetchAuth(`/v1/events/${eventId}/memberships`, {
+    method: "GET",
+  });
+}
+
+export function approveMembership(eventId, membershipId) {
+  return apiFetchAuth(`/v1/events/${eventId}/memberships/${membershipId}/approve`, {
+    method: "PATCH",
+  });
+}
+
+export function rejectMembership(eventId, membershipId) {
+  return apiFetchAuth(`/v1/events/${eventId}/memberships/${membershipId}/reject`, {
+    method: "PATCH",
+  });
+}
+
+export function bulkApproveMemberships(eventId) {
+  return apiFetchAuth(`/v1/events/${eventId}/memberships/bulk-approve`, {
+    method: "POST",
+  });
+}
+
+export function bulkRejectMemberships(eventId) {
+  return apiFetchAuth(`/v1/events/${eventId}/memberships/bulk-reject`, {
+    method: "POST",
+  });
+}

@@ -280,15 +280,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               placeholder=""
             />
             <div style={{ marginTop: 30 }} />
-            <FieldRow label="최대 인원">
-              <input
-                className="ec-input ec-input--small"
-                type="number"
-                min={1}
-                value={maxMembership}
-                onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
-              />
-            </FieldRow>
+
           </div>
           <div className="homepage-divider"/>
           <div className="ec-section ec-section--vote">
@@ -355,6 +347,15 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
           <div className="homepage-divider"/>
           <div className="ec-section ec-section--entry">
             <div className="ec-section-title">입장 정책</div>
+            <FieldRow label="최대 인원">
+              <input
+                className="ec-input ec-input--small"
+                type="number"
+                min={1}
+                value={maxMembership}
+                onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
+              />
+            </FieldRow>
             <FieldRow label="입장 코드">
               <div className="ec-inline">
                 <input

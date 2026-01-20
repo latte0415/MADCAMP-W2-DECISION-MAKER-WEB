@@ -6,15 +6,16 @@ import { useOptimisticVoteToggle } from "../hooks/useOptimisticVoteToggle";
 import * as eventsApi from "../api/events";
 import ProposalComposer from "../components/ProposalComposer";
 import CriteriaSection from "../components/CriteriaSectionComponent";
-import ModalShell from "../components/ModalShell";
+import EventSettingsModal from "../components/EventSettingsModal";
 import { useProposalComposer } from "../hooks/useProposalComposer";
 import VoteModal from "../components/VoteModal";
+import EventErrorBanner from "../components/EventErrorBanner";
 
 import "../styles/eventpage.css";
 import "../styles/global.css";
 import "../styles/proposalcomposer.css";
 import "../styles/homepage.css"; 
-import "../styles/votemodal.css";
+
 
 
 const STATUS_TRANSITIONS = {
@@ -97,7 +98,7 @@ export default function EventPage() {
     const {
     composer, draftContent, draftReason,
     composerErr, composerSubmitting,
-    openComposer, closeComposer, submitComposer,
+    openComposer, closeComposer, clearComposerError, submitComposer,
     setDraftContent, setDraftReason,
     commentRefresh,
   } = useProposalComposer({ eventId, fetchDetail });
@@ -326,7 +327,7 @@ export default function EventPage() {
   // polling every 1.5 seconds
   useEffect(() => {
     if (!eventId) return;
-    if (detail?.event_status !== "IN_PROGRESS") return;
+
 
     const POLL_MS = 1500;
     const id = setInterval(() => {
@@ -334,12 +335,11 @@ export default function EventPage() {
     }, POLL_MS);
 
     return () => clearInterval(id);
-  }, [eventId, fetchDetail, detail?.event_status]);
+  }, [eventId, fetchDetail]);
 
   // comment polling.
   useEffect(() => {
     if (!eventId) return;
-    if (detail?.event_status !== "IN_PROGRESS") return;
     if (!openCriteriaIds || openCriteriaIds.length === 0) return;
 
     // initial immediate fetch (so it doesn’t wait 1.5s)
@@ -351,7 +351,7 @@ export default function EventPage() {
     }, POLL_MS);
 
     return () => clearInterval(id);
-  }, [eventId, openCriteriaIds, fetchCommentsForCriterion, detail?.event_status]);
+  }, [eventId, openCriteriaIds, fetchCommentsForCriterion]);
 
   useEffect(() => {
     voteResultFetchedRef.current = false;
@@ -453,7 +453,7 @@ export default function EventPage() {
       </header>
 
       <main className="event-main">
-        {errMsg && <div className="event-error">{errMsg}</div>}
+        <EventErrorBanner message={errMsg} onClose={() => setErrMsg("")} />
 
         <section className="event-section">
           <div className="event-section-title">기본 정보</div>
@@ -570,6 +570,7 @@ export default function EventPage() {
           setReason={setDraftReason}
           submitting={composerSubmitting}
           errorMsg={composerErr}
+          onClearError={clearComposerError}
           onClose={closeComposer}
           onSubmit={submitComposer}
         />
@@ -587,11 +588,16 @@ export default function EventPage() {
           fetchDetail?.();
         }}
       />
-      <ModalShell open={settingsOpen} title="설정 (Placeholder)" onClose={() => setSettingsOpen(false)}>
-        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-          여기에는 “설정” UI가 들어갑니다. (임시 Placeholder)
-        </div>
-      </ModalShell>
+
+      
+      <EventSettingsModal
+        open={settingsOpen}
+        eventId={eventId}
+        onClose={() => setSettingsOpen(false)}
+        detailAssumptions={detail?.assumptions}
+        detailCriteria={detail?.criteria}
+        onPatched={() => fetchDetail()}
+      />
     </div>
   );
 }

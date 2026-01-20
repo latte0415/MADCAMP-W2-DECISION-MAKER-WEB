@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import EventCreationModal from "../components/EventCreationModal";
@@ -6,12 +6,11 @@ import JoinEventModal from "../components/JoinEventModal";
 import EventOverviewModal from "../components/EventOverviewModal";
 import * as eventsApi from "../api/events";
 
-
 import "../styles/homepage.css";
 import "../styles/eventcreationmodal.css";
 import "../styles/joinmodal.css";
 import "../styles/global.css";
-import "../styles/eventoverview.css"
+import "../styles/eventoverview.css";
 
 function statusMeta(event_status) {
   switch (event_status) {
@@ -35,15 +34,13 @@ function membershipBadgeMeta(membership_status) {
     case "REJECTED":
       return { label: "거절됨", className: "badge badge-rejected" };
     default:
-      return null; // ACCEPTED or others -> no badge
+      return null;
   }
 }
 
 function adminBadgeMeta(is_admin) {
   return is_admin ? { label: "관리자", className: "badge badge-admin" } : null;
 }
-
-
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -53,34 +50,25 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
-  const [overviewEventId, setOverviewEventId] = useState(null); 
+  const [overviewEventId, setOverviewEventId] = useState(null);
   const [overview, setOverview] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewErr, setOverviewErr] = useState("");
+  const shouldPollOverview = !!overviewEventId && (overview?.membership_status === "PENDING");
 
-  function closeOverview() {
-  setOverviewEventId(null);
-}
+  const [createOpen, setCreateOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
-function enterEvent() {
-  if (!overviewEventId) return;
-  closeOverview();
-  navigate(`/event/${overviewEventId}`, { replace: true });
-}
-
-
-  const [createOpen, setCreateOpen] = useState(false); 
-  const [joinOpen, setJoinOpen] = useState(false); 
-
+  // ----------------------------
+  // Events list polling (existing)
+  // ----------------------------
   const fetchEvents = useCallback(async () => {
     setErrMsg("");
     try {
       const data = await eventsApi.listParticipatedEvents();
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
-      if (err?.status === 401) {
-        return;
-      }
+      if (err?.status === 401) return;
       setErrMsg(err?.message || "이벤트 목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
@@ -95,36 +83,86 @@ function enterEvent() {
 
   useEffect(() => {
     if (bootstrapping) return;
-
-    const POLL_MS = 3000;
+    const POLL_MS = 1500;
     const id = setInterval(fetchEvents, POLL_MS);
     return () => clearInterval(id);
   }, [bootstrapping, fetchEvents]);
 
-  useEffect(() => {
-    if (!overviewEventId) return;
+  // ----------------------------
+  // Overview polling (NEW)
+  // - foreground fetch once when opened (shows spinner)
+  // - background polling while open (no spinner flicker)
+  // ----------------------------
+  const overviewInFlightRef = useRef(false);
+  const overviewHydratedRef = useRef(false);
 
-    let alive = true;
-    setOverviewLoading(true);
-    setOverviewErr("");
-    setOverview(null);
+  const fetchOverview = useCallback(
+    async ({ foreground = false } = {}) => {
+      if (!overviewEventId) return;
+      if (overviewInFlightRef.current) return;
 
-    (async () => {
+      overviewInFlightRef.current = true;
+
+      if (foreground) {
+        setOverviewLoading(true);
+        setOverviewErr("");
+        setOverview(null);
+        overviewHydratedRef.current = false;
+      }
+
       try {
         const data = await eventsApi.getEventOverview(overviewEventId);
-        if (alive) setOverview(data);
+        setOverview(data);
+        setOverviewErr(""); // success clears error
+        overviewHydratedRef.current = true;
       } catch (err) {
-        if (alive) setOverviewErr(err?.message || "이벤트 오버뷰를 불러오지 못했습니다.");
+        // Avoid noisy error changes during background polling if we already have data
+        if (!overviewHydratedRef.current) {
+          setOverviewErr(err?.message || "이벤트 오버뷰를 불러오지 못했습니다.");
+        }
       } finally {
-        if (alive) setOverviewLoading(false);
+        overviewInFlightRef.current = false;
+        if (foreground) setOverviewLoading(false);
       }
-    })();
+    },
+    [overviewEventId]
+  );
 
-    return () => {
-      alive = false;
-    };
-  }, [overviewEventId]);
+  // Foreground fetch exactly when modal opens / target changes
+  useEffect(() => {
+    if (!overviewEventId) return;
+    fetchOverview({ foreground: true });
+  }, [overviewEventId, fetchOverview]);
 
+  // Background polling while modal is open
+  useEffect(() => {
+    if (!shouldPollOverview) return;
+
+    const POLL_MS = 1500;
+    const id = setInterval(() => {
+      fetchOverview({ foreground: false });
+    }, POLL_MS);
+
+    return () => clearInterval(id);
+  }, [shouldPollOverview, fetchOverview]);
+
+  // ----------------------------
+  // Modal controls
+  // ----------------------------
+  const closeOverview = useCallback(() => {
+    setOverviewEventId(null);
+    setOverview(null);
+    setOverviewLoading(false);
+    setOverviewErr("");
+    overviewHydratedRef.current = false;
+    overviewInFlightRef.current = false;
+  }, []);
+
+  const enterEvent = useCallback(() => {
+    if (!overviewEventId) return;
+    closeOverview();
+    navigate(`/event/${overviewEventId}`, { replace: true });
+  }, [overviewEventId, closeOverview, navigate]);
 
   const emptyState = useMemo(() => !loading && !errMsg && events.length === 0, [loading, errMsg, events]);
 
@@ -148,9 +186,8 @@ function enterEvent() {
 
       <main className="home-main">
         {errMsg && <div className="home-error">{errMsg}</div>}
-        
 
-        {emptyState && <div className="home-empty">참가한 이벤트가 없습니다.</div>}
+        {emptyState && <div style={{ marginTop: 16, marginLeft: 20, fontSize: 25 }}>참여한 이벤트가 없습니다.</div>}
 
         <div className="event-list">
           {events.map((ev) => {
@@ -168,9 +205,7 @@ function enterEvent() {
                 <div className="event-left">
                   <div className="event-title-row">
                     {adminBadge && <span className={adminBadge.className}>{adminBadge.label}</span>}
-                    {membershipBadge && (
-                      <span className={membershipBadge.className}>{membershipBadge.label}</span>
-                    )}
+                    {membershipBadge && <span className={membershipBadge.className}>{membershipBadge.label}</span>}
                     <div className="event-title">{ev.decision_subject}</div>
                   </div>
 
@@ -204,7 +239,6 @@ function enterEvent() {
         onClose={() => setCreateOpen(false)}
         onCreated={(created) => {
           setCreateOpen(false);
-          // optionally refresh list later; for now just navigate
           navigate(`/event/${created.id}`, { replace: true });
         }}
       />
@@ -213,13 +247,8 @@ function enterEvent() {
         open={joinOpen}
         onClose={() => setJoinOpen(false)}
         onJoined={(res) => {
-          // res: { message, event_id }
           setJoinOpen(false);
-
-          if (res?.event_id) {
-            setOverviewEventId(res?.event_id);
-          };
-
+          if (res?.event_id) setOverviewEventId(res.event_id);
         }}
       />
     </div>
