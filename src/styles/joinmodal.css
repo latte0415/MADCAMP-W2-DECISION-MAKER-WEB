@@ -1,67 +1,112 @@
+/* ============================================
+   참여 모달 스타일 (미니멀 클린)
+   ============================================ */
+
 .join-card {
   width: min(720px, 92vw);
-  background: #fff;
-  border: 2px solid #bfbfbf;
-  border-radius: 6px;
-  padding: 26px 22px 20px 22px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8) var(--spacing-7) var(--spacing-7) var(--spacing-7);
   position: relative;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-5);
+  box-shadow: var(--shadow-xl);
 }
 
 .join-close {
-  position: sticky;               /* stays visible while scrolling */
-  top: 0;
-  left: 0;
-  align-self: flex-start;
-  margin: -6px 0 6px -6px;
-  z-index: 2;
-
+  position: absolute;
+  top: var(--spacing-5);
+  right: var(--spacing-5);
+  z-index: 10;
   border: 0;
   background: transparent;
-  font-size: 30px;
+  font-size: 24px;
   cursor: pointer;
-  color: #333;
+  color: var(--color-text-tertiary);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+  line-height: 1;
+  font-weight: var(--font-weight-regular);
 }
+
+.join-close:hover {
+  background: var(--color-neutral-100);
+  color: var(--color-text-primary);
+}
+
+.join-close:hover {
+  background: var(--color-neutral-100);
+  color: var(--color-text-primary);
+}
+
 .join-title {
-  margin-top: -20px;
-  margin-bottom: 0px;
-  font-size: 26px;
-  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  text-align: center;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .join-input {
-  width: 250px;
-  height: 40px;
-  border: 1px solid #bdbdbd;
-  border-radius: 6px;
-  padding: 0 10px;
-  margin-bottom: 20px;
+  width: 280px;
+  height: 52px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 0 var(--spacing-5);
+  margin-bottom: var(--spacing-5);
   outline: none;
-  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 600;
-  font-size: 25px;
+  font-family: var(--font-family-secondary);
+  font-weight: var(--font-weight-semi-bold);
+  font-size: var(--font-size-h4);
+  color: var(--color-text-primary);
   box-sizing: border-box;
-  text-align: left;
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all var(--transition-base);
+  line-height: var(--line-height-normal);
+}
+
+.join-input:focus {
+  border-color: var(--color-neutral-600);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
+}
+
+.join-input::placeholder {
+  color: var(--color-text-tertiary);
+  text-transform: none;
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .join-msg {
-  font-size: 12px;
-  margin-top: -6px;
+  font-size: var(--font-size-body-sm);
+  margin-top: calc(var(--spacing-2) * -1);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
 }
 
 .join-msg--err {
-  color: #c0392b;
+  color: var(--color-error);
 }
 
 .join-msg--ok {
-  color: #2e7d32;
+  color: var(--color-success);
 }
 
 .join-submit {
-  margin-top: 8px;
-  padding: 10px 22px;
+  margin-top: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-6);
 }

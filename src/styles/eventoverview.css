@@ -1,42 +1,54 @@
+/* ============================================
+   이벤트 오버뷰 모달 스타일 (미니멀 클린)
+   ============================================ */
+
 .eo-card {
   width: min(900px, 92vw);
-  background: #fff;
-  border: 2px solid #bfbfbf;
-  border-radius: 6px;
-  padding: 16px 18px 14px 18px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: 0;
   position: relative;
-
   display: flex;
   flex-direction: column;
-  max-height: 80vh;     /* cap overall modal height */
-  overflow: hidden;     /* prevent card itself from overflowing */
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
 }
 
 .eo-close {
-  position: sticky;               /* stays visible while scrolling */
-  top: 0;
-  left: 0;
-  align-self: flex-start;
-  margin: -6px 0 6px -6px;
-  z-index: 2;
-
+  position: absolute;
+  top: var(--spacing-5);
+  right: var(--spacing-5);
+  z-index: 10;
   border: 0;
   background: transparent;
-  font-size: 30px;
+  font-size: 24px;
   cursor: pointer;
-  color: #333;
+  color: var(--color-text-tertiary);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+  line-height: 1;
+  font-weight: var(--font-weight-regular);
+}
+
+.eo-close:hover {
+  background: var(--color-neutral-100);
+  color: var(--color-text-primary);
 }
 
 .eo-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding-left: 18px; /* align after close button */
-  padding-right: 6px;
-
-  overflow: auto;       /* scroll when content exceeds available height */
-  flex: 1 1 auto;       /* take remaining height inside eo-card */
-  min-height: 0;        /* IMPORTANT: enables flex child scrolling */
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-4) var(--spacing-6);
+  min-height: 0;
 }
 
 .eo-main {
@@ -45,64 +57,67 @@
 }
 
 .eo-side {
-  display: flex;
-
-  align-items: flex-start;
-  justify-content: flex-end;
-  min-width: 110px;
-  padding-right: 18px; 
-  padding-top: 7px;
+  display: none; /* 필요시 다시 활성화 */
 }
 
 .eo-row {
   display: grid;
   grid-template-columns: 100px 1fr;
-  gap: 10px;
-  margin: 15px 0;
+  gap: var(--spacing-3);
+  margin: var(--spacing-4) 0;
   align-items: start;
 }
 
 .eo-label {
-  font-weight: 480;
-  font-size: 20px;
-  padding-top: 0px;
-  padding-left: 10px;
+  font-weight: var(--font-weight-semi-bold);
+  font-size: var(--font-size-body-lg);
+  padding-top: 2px;
+  padding-left: var(--spacing-4);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
 }
 
 .eo-value {
   padding-top: 2px;
-  font-size: 17px;
-
-  color: #111;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
   min-width: 0;
+  line-height: var(--line-height-relaxed);
+  font-weight: var(--font-weight-regular);
 }
 
 .eo-list {
   margin: 0;
-  padding-left: 18px;
+  padding-left: var(--spacing-5);
 }
 
 .eo-list-elt {
   margin: 0;
-  padding-bottom: 7px;
-
+  padding-bottom: var(--spacing-2);
+  line-height: var(--line-height-relaxed);
 }
 
-
 .eo-muted {
-  color: rgba(0,0,0,0.45);
+  color: var(--color-text-muted);
 }
 
 .eo-error {
-  margin: 8px 0 0 18px;
-  color: #c0392b;
-  font-size: 12px;
+  margin: 0 var(--spacing-6) var(--spacing-4) var(--spacing-6);
+  color: var(--color-error);
+  font-size: var(--font-size-body-sm);
+  background: rgba(239, 68, 68, 0.08);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-error);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  flex-shrink: 0;
 }
 
 .eo-divider {
   width: 15%;
   height: 1px;
-  background: #bfbfbf;
+  background: var(--color-border-light);
 }
 
 .eo-bottom {
@@ -110,35 +125,35 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 15px 0 6px 0;
+  padding: var(--spacing-5) var(--spacing-6);
+  border-top: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+  background: var(--color-white);
 }
 
 .eo-membership-msg {
-  font-weight: 480;
-  font-size: 25px;
-  color: #111;
-
-  margin-top: 0px; 
-  margin-bottom: 14px;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-h4);
+  color: var(--color-text-primary);
+  margin-top: 0;
+  margin-bottom: var(--spacing-5);
+  text-align: center;
+  line-height: var(--line-height-normal);
 }
 
 .eo-enter-btn {
   position: absolute;
-  font-size: 18px;
-  height: 40px;
-
+  font-size: var(--font-size-body);
+  height: 44px;
   right: 0;
-  bottom: 100;
-  padding: 8px 20px;
-  border-radius: 6px;
-  margin-top: 5px; 
-  margin-bottom: 14px;
-  margin-right: 15px;
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  margin-right: var(--spacing-4);
 }
 
 .eo-header {
   display: flex;
   justify-content: flex-start;
-  margin: 5px 0px 20px 25px; /* align with label padding-left */
+  margin: 0 0 var(--spacing-5) 0;
 }
 
