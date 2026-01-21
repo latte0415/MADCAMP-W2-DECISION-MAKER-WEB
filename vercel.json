@@ -7,6 +7,10 @@
       {
         "source": "/v1/:path*",
         "destination": "http://15.164.74.228/v1/:path*"
+      },
+      { 
+        "source": "/(.*)", 
+        "destination": "/" 
       }
     ]
   }
