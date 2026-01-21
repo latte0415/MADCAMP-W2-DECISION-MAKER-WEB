@@ -49,7 +49,12 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0 }) {
   }
 
   return (
-    <FieldRow label={label}>
+    <FieldRow label={
+      <div>
+        <div>{label}</div>
+        <div className="ec-field-hint ec-field-hint--label">{items.length}/{max}</div>
+      </div>
+    }>
       <div className="ec-list">
         {items.map((v, i) => {
           const canDelete = items.length > min;
@@ -64,7 +69,7 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0 }) {
               {canDelete && i >= min && (
                 <button
                 type="button"
-                className="dm-btn dm-btn--ghost"
+                className="ec-btn-delete"
                 onClick={() => removeAt(i)}
                 disabled={!canDelete}
                 aria-label={`${label} ${i + 1} 삭제`}
@@ -80,18 +85,12 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0 }) {
 
         <button
           type="button"
-          className={`dm-btn dm-btn--outline dm-btn--submit ${
-            !canAdd ? "dm-btn--disabledlike" : ""
-          }`}
+          className={`ec-btn-add ${!canAdd ? "ec-btn-add--disabled" : ""}`}
           onClick={addOne}
           disabled={!canAdd}
         >
           추가하기
         </button>
-
-        <div className="ec-hint">
-          {items.length}/{max}
-        </div>
       </div>
     </FieldRow>
   );
@@ -115,15 +114,19 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
   const [criteria, setCriteria] = useState([""]);
 
   const [maxMembership, setMaxMembership] = useState(10);
+  const [maxMembershipInput, setMaxMembershipInput] = useState("10");
 
   // Vote policies
   const [assumptionAutoByVotes, setAssumptionAutoByVotes] = useState(true);
   const [assumptionMinVotes, setAssumptionMinVotes] = useState(3);
+  const [assumptionMinVotesInput, setAssumptionMinVotesInput] = useState("3");
 
   const [criteriaAutoByVotes, setCriteriaAutoByVotes] = useState(true);
   const [criteriaMinVotes, setCriteriaMinVotes] = useState(3);
+  const [criteriaMinVotesInput, setCriteriaMinVotesInput] = useState("3");
 
   const [conclusionApprovalPercent, setConclusionApprovalPercent] = useState(50);
+  const [conclusionApprovalPercentInput, setConclusionApprovalPercentInput] = useState("50");
 
   // Entrance policies
   const [membershipAutoApproved, setMembershipAutoApproved] = useState(true);
@@ -153,10 +156,14 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
     // Common sense: need at least 2 non-empty options
     const optionsOk = o.length >= 2 && o.length <= MAX_OPTIONS;
 
+    // 입장 코드 중복 확인 완료되어야 함
+    const codeChecked = codeCheck?.is_available === true;
+
     return (
       !loading &&
       subjectOk &&
       entranceCodeValid &&
+      codeChecked &&
       optionsOk &&
       maxOk &&
       percentOk &&
@@ -165,6 +172,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
   }, [
     subject,
     entranceCodeValid,
+    codeCheck,
     options,
     maxMembership,
     conclusionApprovalPercent,
@@ -302,11 +310,25 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
             <div className="ec-spacer" />
             <FieldRow label="최대 인원">
               <input
-                className="ec-input ec-input--small"
-                type="number"
-                min={1}
-                value={maxMembership}
-                onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
+                className={`ec-input ec-input--small ${
+                  maxMembershipInput === ""
+                    ? ""
+                    : /^\d+$/.test(maxMembershipInput) && parseInt(maxMembershipInput, 10) >= 1
+                    ? "ec-input--valid"
+                    : "ec-input--invalid"
+                }`}
+                type="text"
+                value={maxMembershipInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setMaxMembershipInput(val);
+                  if (/^\d+$/.test(val)) {
+                    const num = parseInt(val, 10);
+                    if (num >= 1) {
+                      setMaxMembership(num);
+                    }
+                  }
+                }}
               />
             </FieldRow>
           </div>
@@ -325,12 +347,26 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
                 <span className="ec-spacer-inline" />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
-                  className="ec-input ec-input--small"
-                  type="number"
-                  min={1}
+                  className={`ec-input ec-input--small ${
+                    assumptionMinVotesInput === ""
+                      ? ""
+                      : /^\d+$/.test(assumptionMinVotesInput) && parseInt(assumptionMinVotesInput, 10) >= 1
+                      ? "ec-input--valid"
+                      : "ec-input--invalid"
+                  }`}
+                  type="text"
                   disabled={!assumptionAutoByVotes}
-                  value={assumptionMinVotes}
-                  onChange={(e) => setAssumptionMinVotes(parseInt(e.target.value || "0", 10))}
+                  value={assumptionMinVotesInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAssumptionMinVotesInput(val);
+                    if (/^\d+$/.test(val)) {
+                      const num = parseInt(val, 10);
+                      if (num >= 1) {
+                        setAssumptionMinVotes(num);
+                      }
+                    }
+                  }}
                 />
               </div>
             </FieldRow>
@@ -346,12 +382,26 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
                 <span className="ec-spacer-inline" />
                 <div className="ec-inline-label">허용하는 최소 투표수</div>
                 <input
-                  className="ec-input ec-input--small"
-                  type="number"
-                  min={1}
+                  className={`ec-input ec-input--small ${
+                    criteriaMinVotesInput === ""
+                      ? ""
+                      : /^\d+$/.test(criteriaMinVotesInput) && parseInt(criteriaMinVotesInput, 10) >= 1
+                      ? "ec-input--valid"
+                      : "ec-input--invalid"
+                  }`}
+                  type="text"
                   disabled={!criteriaAutoByVotes}
-                  value={criteriaMinVotes}
-                  onChange={(e) => setCriteriaMinVotes(parseInt(e.target.value || "0", 10))}
+                  value={criteriaMinVotesInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCriteriaMinVotesInput(val);
+                    if (/^\d+$/.test(val)) {
+                      const num = parseInt(val, 10);
+                      if (num >= 1) {
+                        setCriteriaMinVotes(num);
+                      }
+                    }
+                  }}
                 />
               </div>
             </FieldRow>
@@ -363,42 +413,62 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               }
             >
               <input
-                className="ec-input ec-input--small"
-                type="number"
-                min={1}
-                max={100}
-                value={conclusionApprovalPercent}
-                onChange={(e) => setConclusionApprovalPercent(parseInt(e.target.value || "0", 10))}
+                className={`ec-input ec-input--small ${
+                  conclusionApprovalPercentInput === ""
+                    ? ""
+                    : /^\d+$/.test(conclusionApprovalPercentInput) && parseInt(conclusionApprovalPercentInput, 10) >= 1 && parseInt(conclusionApprovalPercentInput, 10) <= 100
+                    ? "ec-input--valid"
+                    : "ec-input--invalid"
+                }`}
+                type="text"
+                value={conclusionApprovalPercentInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setConclusionApprovalPercentInput(val);
+                  if (/^\d+$/.test(val)) {
+                    const num = parseInt(val, 10);
+                    if (num >= 1 && num <= 100) {
+                      setConclusionApprovalPercent(num);
+                    }
+                  }
+                }}
               />
             </FieldRow>
           </div>
           <div className="homepage-divider"/>
           <div className="ec-section ec-section--entry">
             <div className="ec-section-title">입장 정책</div>
-            <FieldRow label="입장 코드">
-              <div className="ec-inline">
-                <input
-                  className="ec-input ec-input--code"
-                  value={entranceCode}
-                  onChange={(e) => {
-                    setEntranceCode(toUpperAlnum6(e.target.value));
-                    setCodeCheck(null);
-                    setCodeCheckMsg("");
-                  }}
-                  placeholder="ABC123"
-                />
-                <button type="button" className="dm-btn dm-btn--sm" onClick={onGenerateCode}>
-                  랜덤 생성
-                </button>
-                <button type="button" className="dm-btn dm-btn--sm" onClick={onCheckCode}>
-                  중복 확인
-                </button>
+            <FieldRow label={
+              <div>
+                <div>입장 코드</div>
+                <div className="ec-field-hint ec-field-hint--label">6자리 대문자/숫자</div>
               </div>
-              {(codeCheckMsg || codeCheck) && (
-                <div className={`ec-code-msg ${codeCheck?.is_available ? "ok" : "bad"}`}>
-                  {codeCheckMsg}
+            }>
+              <div>
+                <div className="ec-inline">
+                  <input
+                    className="ec-input ec-input--code"
+                    value={entranceCode}
+                    onChange={(e) => {
+                      setEntranceCode(toUpperAlnum6(e.target.value));
+                      setCodeCheck(null);
+                      setCodeCheckMsg("");
+                    }}
+                    placeholder="ABC123"
+                  />
+                  <button type="button" className="dm-btn dm-btn--sm" onClick={onGenerateCode}>
+                    랜덤 생성
+                  </button>
+                  <button type="button" className="dm-btn dm-btn--sm" onClick={onCheckCode}>
+                    중복 확인
+                  </button>
                 </div>
-              )}
+                {(codeCheckMsg || codeCheck) && (
+                  <div className={`ec-field-hint ec-field-hint--code-status ${codeCheck?.is_available ? "ec-field-hint--success" : "ec-field-hint--error"}`}>
+                    {codeCheckMsg}
+                  </div>
+                )}
+              </div>
             </FieldRow>
             <FieldRow label="가입 자동 승인">
               <Toggle checked={membershipAutoApproved} onChange={setMembershipAutoApproved} />
@@ -407,10 +477,6 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
               <button className="dm-btn ec-create-btn" onClick={onCreate} disabled={!canCreate}>
                 {loading ? "생성 중..." : "생성하기"}
               </button>
-            </div>
-            <div className="ec-constraints">
-              <div>입장 코드는 6자리 대문자/숫자입니다.</div>
-              <div>승인되는 동의 최소 퍼센티지는 1과 100 사이여아 합니다.</div>
             </div>
           </div>
         </div>

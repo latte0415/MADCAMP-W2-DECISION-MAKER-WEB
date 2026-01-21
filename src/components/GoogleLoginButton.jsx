@@ -22,8 +22,8 @@ function loadGoogleScript() {
 }
 
 export default function GoogleLoginButton({ onCredential, onError }) {
-  const containerRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -41,22 +41,6 @@ export default function GoogleLoginButton({ onCredential, onError }) {
           callback: (resp) => onCredential?.(resp.credential),
         });
 
-        const el = containerRef.current;
-        if (!el) return;
-
-        // Clear old button (important in StrictMode)
-        el.innerHTML = "";
-
-        // Size to the container width (the parent decides the width via CSS)
-        const w = Math.floor(el.clientWidth);
-
-        window.google.accounts.id.renderButton(el, {
-          theme: "filled_black",
-          size: "large",
-          width: w, // THIS is the key: use actual available width
-          text: "continue_with",
-        });
-
         setReady(true);
       } catch (e) {
         onError?.(e);
@@ -68,11 +52,63 @@ export default function GoogleLoginButton({ onCredential, onError }) {
     };
   }, [onCredential, onError]);
 
+  const handleClick = () => {
+    if (!ready || loading) return;
+    setLoading(true);
+    
+    try {
+      // Use Google's OAuth2 code flow
+      const client = window.google.accounts.oauth2.initCodeClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        scope: 'email profile',
+        ux_mode: 'popup',
+        callback: (response) => {
+          if (response.code) {
+            // The backend should exchange this code for an ID token
+            // For now, we'll use the code directly if the backend expects it
+            // Otherwise, we need to exchange it server-side
+            onCredential?.(response.code);
+          }
+          setLoading(false);
+        },
+      });
+      client.requestCode();
+    } catch (e) {
+      onError?.(e);
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="google-wrap">
-      {!ready && <div className="login-subtle-note">Google 로그인 로딩 중...</div>}
-      {/* This div’s width is controlled by .google-wrap */}
-      <div ref={containerRef} className="google-inner" />
-    </div>
+    <button
+      type="button"
+      className="google-login-btn"
+      onClick={handleClick}
+      disabled={!ready || loading}
+    >
+      <svg className="google-logo" width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" fillRule="evenodd">
+          <path
+            d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+            fill="#4285F4"
+          />
+          <path
+            d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+            fill="#34A853"
+          />
+          <path
+            d="M3.964 10.711c-.18-.54-.282-1.117-.282-1.711s.102-1.171.282-1.711V4.957H.957C.348 6.174 0 7.55 0 9s.348 2.826.957 4.043l3.007-2.332z"
+            fill="#FBBC05"
+          />
+          <path
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.957L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+            fill="#EA4335"
+          />
+        </g>
+      </svg>
+      <span className="google-login-text">
+        {loading ? "로그인 중..." : "Google 계정으로 계속하기"}
+      </span>
+    </button>
   );
 }

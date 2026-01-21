@@ -350,7 +350,7 @@ input[type="email"]::placeholder,
 input[type="password"]::placeholder,
 input[type="number"]::placeholder,
 textarea::placeholder {
-  color: var(--color-text-tertiary);
+  color: rgba(15, 23, 42, 0.35);
   font-weight: var(--font-weight-regular);
 }
 
@@ -438,6 +438,12 @@ textarea:disabled {
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-white);
   flex-shrink: 0;
+}
+
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 .modal-title {
@@ -559,7 +565,7 @@ textarea:disabled {
 }
 
 .badge-admin {
-  background: var(--color-success);
+  background: var(--color-neutral-500);
 }
 
 .badge-pending {
@@ -603,19 +609,19 @@ textarea:disabled {
 }
 
 .status-waiting {
-  background: var(--color-neutral-500);
+  background: #fde047; /* 샛노란색 */
 }
 
 .status-progress {
-  background: var(--color-neutral-700);
+  background: var(--color-success); /* 초록색 */
 }
 
 .status-paused {
-  background: var(--color-neutral-600);
+  background: var(--color-warning); /* 주황색 */
 }
 
 .status-finished {
-  background: var(--color-success);
+  background: #3b82f6; /* 파란색 */
 }
 
 .status-default {

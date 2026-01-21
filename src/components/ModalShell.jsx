@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export default function ModalShell({ open, title, onClose, children }) {
+export default function ModalShell({ open, title, onClose, children, headerActions }) {
   // ESC 키로 모달 닫기
   useEffect(() => {
     if (!open) return;
@@ -28,14 +28,17 @@ export default function ModalShell({ open, title, onClose, children }) {
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">{title}</div>
-          <button 
-            className="modal-close-btn" 
-            onClick={onClose} 
-            aria-label="Close"
-            type="button"
-          >
-            ×
-          </button>
+          <div className="modal-header-actions">
+            {headerActions}
+            <button 
+              className="modal-close-btn" 
+              onClick={onClose} 
+              aria-label="Close"
+              type="button"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div className="modal-body">{children}</div>
       </div>

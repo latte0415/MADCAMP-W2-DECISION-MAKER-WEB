@@ -42,6 +42,20 @@
   color: var(--color-text-primary);
 }
 
+.eo-header-section {
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-4) var(--spacing-6);
+  flex-shrink: 0;
+}
+
+.eo-header-title {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+}
+
 .eo-top {
   flex: 1;
   overflow-y: auto;
@@ -92,6 +106,7 @@
   margin-bottom: var(--spacing-4);
   padding-bottom: var(--spacing-4);
   border-bottom: 1px solid var(--color-border-light);
+  align-items: baseline;
 }
 
 .eo-row:last-child {
@@ -104,13 +119,25 @@
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-body);
   color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
 }
 
 .eo-value {
   font-size: var(--font-size-body);
   color: var(--color-text-primary);
   min-width: 0;
-  line-height: var(--line-height-relaxed);
+  line-height: var(--line-height-normal);
+  display: flex;
+  align-items: flex-start;
+}
+
+.eo-value .status-pill {
+  padding: 2px 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.2;
 }
 
 .eo-list {

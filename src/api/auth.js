@@ -39,3 +39,9 @@ export function updateMyName(name) {
     body: JSON.stringify({ name }),
   });
 }
+
+export function checkEmail(email) {
+  return apiFetch(`/auth/check-email?email=${encodeURIComponent(email)}`, {
+    method: "GET",
+  });
+}

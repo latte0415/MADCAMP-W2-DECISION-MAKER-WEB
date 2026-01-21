@@ -86,13 +86,14 @@ export default function EventOverviewModal({
           ×
         </button>
 
+        <div className="eo-header-section">
+          <h2 className="eo-header-title">이벤트 미리보기</h2>
+        </div>
+
         <div className="eo-top">
 
 
           <div className="eo-main">
-            <div className="eo-header">
-              <div className={st.className}>{st.label}</div>
-            </div>
             <div className="eo-row">
               <div className="eo-label">주제 </div>
               <div className="eo-value">
@@ -104,6 +105,13 @@ export default function EventOverviewModal({
               <div className="eo-label">선택지</div>
               <div className="eo-value">
                 {loading ? <span className="eo-muted">불러오는 중...</span> : <Lines items={optionLines} />}
+              </div>
+            </div>
+            <div className="eo-divider" />
+            <div className="eo-row">
+              <div className="eo-label">진행 상태</div>
+              <div className="eo-value">
+                {loading ? <span className="eo-muted">-</span> : <span className={st.className}>{st.label}</span>}
               </div>
             </div>
             <div className="eo-divider" />
@@ -129,6 +137,14 @@ export default function EventOverviewModal({
                 {loading ? <span className="eo-muted">-</span> : (overview?.event?.entrance_code ?? "-")}
               </div>
             </div>
+            <div className="eo-divider" />
+
+            <div className="eo-row">
+              <div className="eo-label">가입 상태</div>
+              <div className="eo-value">
+                {loading ? <span className="eo-muted">-</span> : membershipMsg}
+              </div>
+            </div>
           </div>
 
           
@@ -139,7 +155,6 @@ export default function EventOverviewModal({
         <div className="homepage-divider" />
 
         <div className="eo-bottom">
-          <div className="eo-membership-msg">{loading ? "" : membershipMsg}</div>
           <button
             className="dm-btn eo-enter-btn"
             onClick={onEnter}

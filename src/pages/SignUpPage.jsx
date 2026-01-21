@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import GoogleLoginButton from "../components/GoogleLoginButton";
+import { checkEmail } from "../api/auth";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export default function SignUpPage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const pwTooShort = pw.length > 0 && pw.length < 8;
   const pwTooLong = pw.length > 20;
@@ -21,12 +24,44 @@ export default function SignUpPage() {
   const canSubmit = useMemo(() => {
     if (loading || bootstrapping) return false;
     if (!email.trim()) return false;
+    if (!emailVerified) return false;
     if (!pw) return false;
     if (!confirmPw) return false;
     if (pw.length < 8 || pw.length > 20) return false;
     if (pw !== confirmPw) return false;
     return true;
-  }, [email, pw, confirmPw, loading, bootstrapping]);
+  }, [email, emailVerified, pw, confirmPw, loading, bootstrapping]);
+
+  async function handleCheckEmail() {
+    if (!email.trim()) {
+      setErrorMsg("이메일을 입력해주세요.");
+      return;
+    }
+
+    setCheckingEmail(true);
+    setErrorMsg("");
+    try {
+      const result = await checkEmail(email.trim());
+      if (result.exists) {
+        setErrorMsg("이미 사용 중인 이메일입니다.");
+        setEmailVerified(false);
+      } else {
+        setEmailVerified(true);
+        setErrorMsg("");
+      }
+    } catch (err) {
+      setErrorMsg(err?.message || "이메일 확인에 실패했습니다.");
+      setEmailVerified(false);
+    } finally {
+      setCheckingEmail(false);
+    }
+  }
+
+  function handleEmailChange(e) {
+    setEmail(e.target.value);
+    setEmailVerified(false);
+    setErrorMsg("");
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -88,35 +123,54 @@ export default function SignUpPage() {
           <h1 className="login-title">Decision Maker</h1>
 
           <form onSubmit={onSubmit} className="login-form">
-            <input
-              className="login-input"
-              type="email"
-              placeholder="E-mail:"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              disabled={loading || bootstrapping}
-            />
+            <label className="signup-label">
+              <span className="signup-label-text">E-mail</span>
+              <div className="signup-email-container">
+                <input
+                  className="login-input signup-email-input"
+                  type="email"
+                  placeholder="E-mail"
+                  value={email}
+                  onChange={handleEmailChange}
+                  autoComplete="email"
+                  disabled={loading || bootstrapping}
+                />
+                <button
+                  type="button"
+                  className="signup-check-btn"
+                  onClick={handleCheckEmail}
+                  disabled={checkingEmail || loading || bootstrapping || !email.trim()}
+                >
+                  {checkingEmail ? "확인 중..." : emailVerified ? "확인 완료" : "중복 확인"}
+                </button>
+              </div>
+            </label>
 
-            <input
-              className="login-input"
-              type="password"
-              placeholder="PW:"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              autoComplete="new-password"
-              disabled={loading || bootstrapping}
-            />
+            <label className="signup-label">
+              <span className="signup-label-text">비밀번호</span>
+              <input
+                className="login-input"
+                type="password"
+                placeholder="사용하실 비밀번호를 입력해주세요."
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                autoComplete="new-password"
+                disabled={loading || bootstrapping}
+              />
+            </label>
 
-            <input
-              className="login-input"
-              type="password"
-              placeholder="Confirm PW:"
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-              autoComplete="new-password"
-              disabled={loading || bootstrapping}
-            />
+            <label className="signup-label">
+              {/* <span className="signup-label-text">PW 확인</span> */}
+              <input
+                className="login-input"
+                type="password"
+                placeholder="비밀번호를 한 번 더 입력해주세요."
+                value={confirmPw}
+                onChange={(e) => setConfirmPw(e.target.value)}
+                autoComplete="new-password"
+                disabled={loading || bootstrapping}
+              />
+            </label>
 
             {/* Optional inline hints, shown only when relevant */}
             {(pwTooShort || pwTooLong || pwMismatch) && (
@@ -131,7 +185,7 @@ export default function SignUpPage() {
               {loading ? "처리 중..." : "회원가입"}
             </button>
 
-            <div className="login-links-row">
+            <div className="login-links-container">
               <Link className="login-link" to="/login">
                 로그인으로 돌아가기
               </Link>

@@ -76,7 +76,7 @@ export default function JoinEventModal({ open, onClose, onJoined }) {
           ×
         </button>
 
-        <div className="join-title">코드를 입력해주세요:</div>
+        <div className="join-title">코드를 입력해주세요</div>
 
         <input
           className="join-input"

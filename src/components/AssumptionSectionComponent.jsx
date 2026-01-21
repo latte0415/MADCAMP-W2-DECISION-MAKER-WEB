@@ -12,7 +12,7 @@ export default function AssumptionsSection({
   eventStatus,
   onProposalStatusChange,
 }) {
-  const list = Array.isArray(assumptions) ? assumptions : [];
+  const list = Array.isArray(assumptions) ? assumptions.filter((a) => !a?.is_deleted) : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
 
   function isPending(p) {
@@ -142,6 +142,7 @@ export default function AssumptionsSection({
                         proposalId={p?.id}
                         proposalType="assumption"
                         currentStatus={p?.proposal_status}
+                        eventStatus={eventStatus}
                         onStatusChange={onProposalStatusChange}
                       />
                     )}
