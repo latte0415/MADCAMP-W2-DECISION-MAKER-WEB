@@ -1,0 +1,282 @@
+/* ============================================
+   사용자 가이드 페이지 스타일
+   ============================================ */
+
+.userguide-root {
+  min-height: 100vh;
+  background: var(--color-bg-secondary);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* 헤더 영역 */
+.userguide-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-6) var(--spacing-6);
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border-light);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.userguide-brand {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  font-family: var(--font-family-secondary);
+}
+
+.userguide-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+/* 메인 콘텐츠 영역 */
+.userguide-main {
+  flex: 1;
+  padding: var(--spacing-8) var(--spacing-6);
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 페이지 헤더 섹션 */
+.userguide-header-section {
+  margin-bottom: var(--spacing-10);
+}
+
+.userguide-header-title {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-3) 0;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  position: relative;
+  display: inline-block;
+}
+
+.userguide-header-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-neutral-900), transparent);
+  border-radius: 2px;
+}
+
+.userguide-header-subtitle {
+  font-size: var(--font-size-body-lg);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+/* 콘텐츠 영역 */
+.userguide-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-10);
+}
+
+/* 섹션 스타일 */
+.userguide-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.userguide-section:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-base);
+}
+
+.userguide-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-5);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.userguide-section-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--color-neutral-900);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.userguide-section-title {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+}
+
+.userguide-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+/* 하위 섹션 스타일 */
+.userguide-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.userguide-subsection-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  padding-left: var(--spacing-2);
+  border-left: 4px solid var(--color-neutral-900);
+}
+
+.userguide-description-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.userguide-description-item {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  padding-left: var(--spacing-6);
+  position: relative;
+}
+
+.userguide-description-item::before {
+  content: '•';
+  position: absolute;
+  left: var(--spacing-2);
+  color: var(--color-neutral-900);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-h4);
+}
+
+/* 푸터 영역 */
+.userguide-footer {
+  margin-top: var(--spacing-12);
+  padding: var(--spacing-8);
+  background: var(--color-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-5);
+  text-align: center;
+}
+
+.userguide-footer-text {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .userguide-topbar {
+    padding: var(--spacing-4) var(--spacing-6);
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+  }
+
+  .userguide-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .userguide-main {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
+
+  .userguide-header-title {
+    font-size: var(--font-size-h2);
+  }
+
+  .userguide-section {
+    padding: var(--spacing-6);
+  }
+
+  .userguide-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+  }
+
+  .userguide-section-number {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-h4);
+  }
+
+  .userguide-section-title {
+    font-size: var(--font-size-h3);
+  }
+
+  .userguide-subsection-title {
+    font-size: var(--font-size-h4);
+  }
+
+  .userguide-description-item {
+    font-size: var(--font-size-body-sm);
+    padding-left: var(--spacing-5);
+  }
+
+  .userguide-footer {
+    padding: var(--spacing-6);
+  }
+}
+
+@media (max-width: 480px) {
+  .userguide-main {
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+
+  .userguide-section {
+    padding: var(--spacing-5);
+  }
+
+  .userguide-section-content {
+    gap: var(--spacing-6);
+  }
+}

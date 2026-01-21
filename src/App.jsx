@@ -7,6 +7,7 @@ import FindPasswordPage from "./pages/FindPasswordPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import InitNamePage from "./pages/InitNamePage.jsx";
 import EventPage from "./pages/EventPage.jsx";
+import UserGuidePage from "./pages/UserGuidePage.jsx";
 import RequireAuth from "./auth/RequireAuth.jsx";
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
           </RequireAuth>
         }
       />
+      <Route path="/user-guide" element={<UserGuidePage />} />
 
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
