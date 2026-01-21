@@ -35,44 +35,77 @@ export default function GoogleLoginButton({ onCredential, onError }) {
     (async () => {
       try {
         const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-        if (!clientId) throw new Error("Missing VITE_GOOGLE_CLIENT_ID in .env");
+        if (!clientId) {
+          const error = new Error("Missing VITE_GOOGLE_CLIENT_ID. Check Vercel environment variables.");
+          console.error("[GoogleLoginButton] Environment variable missing:", error);
+          onError?.(error);
+          return;
+        }
 
         await loadGoogleScript();
         if (!mounted) return;
+
+        if (!window.google?.accounts?.id) {
+          const error = new Error("Google Identity Services failed to load");
+          console.error("[GoogleLoginButton] Google script not loaded");
+          onError?.(error);
+          return;
+        }
 
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (resp) => {
             try {
+              if (!resp?.credential) {
+                console.error("[GoogleLoginButton] No credential in response");
+                onError?.(new Error("Google login failed: no credential received"));
+                return;
+              }
               onCredential?.(resp.credential); // ID token (JWT)
             } catch (e) {
+              console.error("[GoogleLoginButton] Callback error:", e);
               onError?.(e);
             }
           },
         });
 
         // Wait for the overlay container to be available
+        let retryCount = 0;
+        const maxRetries = 20; // 1 second max wait
         const renderButton = () => {
           if (!overlayRef.current) {
-            setTimeout(renderButton, 50);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              setTimeout(renderButton, 50);
+            } else {
+              const error = new Error("Failed to render Google button: container not found");
+              console.error("[GoogleLoginButton]", error);
+              onError?.(error);
+            }
             return;
           }
 
-          overlayRef.current.innerHTML = "";
+          try {
+            overlayRef.current.innerHTML = "";
 
-          // Match width to parent button
-          const width = overlayRef.current.parentElement?.offsetWidth || 300;
-          window.google.accounts.id.renderButton(overlayRef.current, {
-            theme: "outline",
-            size: "large",
-            width: width,
-          });
+            // Match width to parent button
+            const width = overlayRef.current.parentElement?.offsetWidth || 300;
+            window.google.accounts.id.renderButton(overlayRef.current, {
+              theme: "outline",
+              size: "large",
+              width: width,
+            });
 
-          setReady(true);
+            setReady(true);
+          } catch (e) {
+            console.error("[GoogleLoginButton] Render error:", e);
+            onError?.(e);
+          }
         };
 
         renderButton();
       } catch (e) {
+        console.error("[GoogleLoginButton] Initialization error:", e);
         onError?.(e);
       }
     })();
