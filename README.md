@@ -1,1 +1,1 @@
-# Frontend login component for MadCamp Week 2
+# Frontend component for MadCamp Week 2
