@@ -316,7 +316,7 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
         ) : null
       }
     >
-      <div className="membership-modal-content" style={{marginTop: "-15px"}}>
+      <div className="membership-modal-content">
         {loadingData && (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <LoadingSpinner message="멤버십 정보를 불러오는 중..." />
