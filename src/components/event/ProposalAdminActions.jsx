@@ -66,7 +66,7 @@ export function ProposalAdminActions({ eventId, proposalId, proposalType, curren
       <div className="proposal-admin-buttons">
         <button
           type="button"
-          className="dm-btn dm-btn--sm dm-btn--success"
+          className="dm-btn dm-btn--xs dm-btn--success"
           onClick={() => handleStatusChange("ACCEPTED")}
           disabled={loading || isDisabled}
         >
@@ -74,7 +74,7 @@ export function ProposalAdminActions({ eventId, proposalId, proposalType, curren
         </button>
         <button
           type="button"
-          className="dm-btn dm-btn--sm dm-btn--danger"
+          className="dm-btn dm-btn--xs dm-btn--danger"
           onClick={() => handleStatusChange("REJECTED")}
           disabled={loading || isDisabled}
         >

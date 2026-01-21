@@ -43,25 +43,6 @@ function CommentItem({ comment, eventId, currentUserId, criterionId, onUpdate })
     <div className="cr-comment">
       <div className="cr-comment-head">
         <span className="cr-comment-name">{comment?.creator?.name ?? "-"}</span>
-        {isMyComment && !editing && (
-          <div className="cr-comment-actions">
-            <button
-              type="button"
-              className="dm-btn dm-btn--xs dm-btn--ghost"
-              onClick={() => setEditing(true)}
-            >
-              수정
-            </button>
-            <button
-              type="button"
-              className="dm-btn dm-btn--xs dm-btn--ghost"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? "삭제 중..." : "삭제"}
-            </button>
-          </div>
-        )}
       </div>
       {editing ? (
         <div className="cr-comment-edit">
@@ -93,6 +74,25 @@ function CommentItem({ comment, eventId, currentUserId, criterionId, onUpdate })
         </div>
       ) : (
         <div className="cr-comment-content">{comment?.content ?? ""}</div>
+      )}
+      {isMyComment && !editing && (
+        <div className="cr-comment-actions">
+          <button
+            type="button"
+            className="dm-btn dm-btn--xs dm-btn--ghost"
+            onClick={() => setEditing(true)}
+          >
+            수정
+          </button>
+          <button
+            type="button"
+            className="dm-btn dm-btn--xs dm-btn--ghost"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "삭제 중..." : "삭제"}
+          </button>
+        </div>
       )}
     </div>
   );
@@ -194,7 +194,7 @@ function renderConclusionVote(p) {
 }
 
   function conclusionStatusLabel(status) {
-    if (status === "PENDING") return "투표중";
+    if (status === "PENDING") return "투표 중";
     if (status === "ACCEPTED") return "채택됨";
     return null;
   }
@@ -487,7 +487,7 @@ function renderConclusionVote(p) {
               return (
                 <div key={p?.id} className={boxClass}>
                   <div className="ass-proposal-row ass-proposal-row--plain conc-row">
-                    <div className="ass-tag--conc"> 결론 | {statusLabel} </div>
+                    <div className="ass-tag--conc"> 결론 ({statusLabel}) </div>
 
 
                     <div className="ass-proposal-text conc-text">

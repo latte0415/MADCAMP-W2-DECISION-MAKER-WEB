@@ -3,10 +3,16 @@
    ============================================ */
 
 .vote-modal-content {
-  padding: var(--spacing-5);
-  min-width: 550px;
-  max-width: 700px;
+  padding: 0;
+  padding-top: var(--spacing-3);
   width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .vote-modal-content {
+    min-width: auto;
+  }
 }
 
 .vote-section {
@@ -138,8 +144,7 @@
 /* 반응형 */
 @media (max-width: 768px) {
   .vote-modal-content {
-    min-width: auto;
-    padding: var(--spacing-4);
+    padding: 0;
   }
   
   .vote-option-btn {

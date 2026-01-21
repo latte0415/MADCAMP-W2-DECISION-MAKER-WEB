@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import GoogleLoginButton from "../components/GoogleLoginButton";
@@ -17,9 +17,23 @@ export default function SignUpPage() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
+  const emailInputRef = useRef(null);
+
   const pwTooShort = pw.length > 0 && pw.length < 8;
   const pwTooLong = pw.length > 20;
   const pwMismatch = confirmPw.length > 0 && pw !== confirmPw;
+
+  // 이메일 양식이 유효한지 확인
+  const isEmailValid = useMemo(() => {
+    if (!email.trim()) return false;
+    const emailInput = emailInputRef.current;
+    if (emailInput) {
+      return emailInput.checkValidity();
+    }
+    // ref가 없을 경우 정규식으로 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }, [email]);
 
   const canSubmit = useMemo(() => {
     if (loading || bootstrapping) return false;
@@ -127,6 +141,7 @@ export default function SignUpPage() {
               <span className="signup-label-text">E-mail</span>
               <div className="signup-email-container">
                 <input
+                  ref={emailInputRef}
                   className="login-input signup-email-input"
                   type="email"
                   placeholder="E-mail"
@@ -139,7 +154,7 @@ export default function SignUpPage() {
                   type="button"
                   className="signup-check-btn"
                   onClick={handleCheckEmail}
-                  disabled={checkingEmail || loading || bootstrapping || !email.trim()}
+                  disabled={checkingEmail || loading || bootstrapping || !email.trim() || !isEmailValid}
                 >
                   {checkingEmail ? "확인 중..." : emailVerified ? "확인 완료" : "중복 확인"}
                 </button>
