@@ -1,0 +1,113 @@
+.assumption-card {
+  margin-bottom: var(--spacing-5);
+  animation: slideUp var(--transition-base) ease-out;
+}
+
+.assumption-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.assumption-text {
+  font-size: 16px;
+  color: var(--neutral-900);
+  flex: 1;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.assumption-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.proposal-item {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-5);
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--neutral-300);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  animation: slideUp var(--transition-base) ease-out;
+}
+
+.proposal-item:hover {
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--neutral-500);
+  transform: translateX(2px);
+}
+
+.proposal-item.rejected {
+  text-decoration: line-through;
+  opacity: 0.5;
+  background-color: var(--neutral-50);
+  border-left-color: var(--error);
+}
+
+.proposal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+}
+
+.proposal-tag {
+  padding: 6px 12px;
+  background-color: var(--neutral-200);
+  color: var(--neutral-700);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-sm);
+}
+
+.proposal-content {
+  font-size: 15px;
+  color: var(--neutral-900);
+  flex: 1;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.proposal-reason {
+  font-size: 13px;
+  color: var(--neutral-600);
+  margin-bottom: var(--spacing-3);
+  padding-left: var(--spacing-2);
+  border-left: 2px solid var(--neutral-300);
+  font-style: italic;
+}
+
+.proposal-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--neutral-200);
+  flex-wrap: wrap;
+}
+
+.vote-count {
+  font-size: 13px;
+  color: var(--neutral-600);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.vote-count::before {
+  content: '👥';
+  font-size: 14px;
+}
