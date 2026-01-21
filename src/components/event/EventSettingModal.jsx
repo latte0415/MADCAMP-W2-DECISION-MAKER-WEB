@@ -24,11 +24,20 @@ function FieldRow({ label, children }) {
 }
 
 function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit = true }) {
-  const canAdd = items.length < max && canEdit;
+  const filteredItems = items.filter((item) => item.content !== null);
+  const canAdd = filteredItems.length < max && canEdit;
 
-  function updateAt(i, v) {
-    const next = items.slice();
-    next[i] = v;
+  function updateAt(filteredIdx, newContent) {
+    let currentIdx = 0;
+    const next = items.map((item) => {
+      if (item.content === null) return item;
+      if (currentIdx === filteredIdx) {
+        currentIdx++;
+        return { ...item, content: newContent };
+      }
+      currentIdx++;
+      return item;
+    });
     setItems(next);
   }
 
@@ -54,38 +63,57 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit
   return (
     <FieldRow label={label}>
       <div className="ec-list">
-        {items
-          .filter((item) => item.content !== null)
-          .map((item, i) => {
-            const canDelete = items.filter((it) => it.content !== null).length > min && canEdit;
-            return (
-              <div key={item.id || `new-${i}`} className="ec-list-row">
-                <input
-                  className="ec-input"
-                  value={item.content || ""}
-                  placeholder={placeholder}
-                  onChange={(e) => updateAt(i, { ...item, content: e.target.value })}
-                  disabled={!canEdit}
-                />
-                {canDelete && canEdit && (
-                  <button
-                    type="button"
-                    className="dm-btn dm-btn--ghost"
-                    onClick={() => removeAt(i)}
-                    aria-label={`${label} ${i + 1} 삭제`}
-                    title="삭제"
-                  >
-                    삭제
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        {filteredItems.map((item, i) => {
+          const canDelete = filteredItems.length > min && canEdit;
+          return (
+            <div key={item.id || `new-${i}`} className="ec-list-row">
+              <input
+                className="ec-input"
+                value={item.content || ""}
+                placeholder={placeholder}
+                onChange={(e) => updateAt(i, e.target.value)}
+                disabled={!canEdit}
+              />
+              {canDelete && canEdit && (
+                <button
+                  type="button"
+                  className="ec-btn-delete"
+                  onClick={() => {
+                    let currentIdx = 0;
+                    const targetItem = items.find((it) => {
+                      if (it.content === null) return false;
+                      if (currentIdx === i) return true;
+                      currentIdx++;
+                      return false;
+                    });
+                    if (targetItem) {
+                      const actualIdx = items.indexOf(targetItem);
+                      if (actualIdx !== -1) {
+                        const next = items.slice();
+                        if (next[actualIdx].id) {
+                          next[actualIdx] = { ...next[actualIdx], content: null };
+                        } else {
+                          next.splice(actualIdx, 1);
+                        }
+                        setItems(next);
+                      }
+                    }
+                  }}
+                  disabled={!canDelete}
+                  aria-label={`${label} ${i + 1} 삭제`}
+                  title="삭제"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
+          );
+        })}
 
         {canAdd && (
           <button
             type="button"
-            className="dm-btn dm-btn--outline dm-btn--submit"
+            className="ec-btn-add"
             onClick={addOne}
           >
             추가하기
@@ -93,7 +121,7 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit
         )}
 
         <div className="ec-hint">
-          {items.filter((item) => item.content !== null).length}/{max}
+          {filteredItems.length}/{max}
         </div>
       </div>
     </FieldRow>
@@ -127,6 +155,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
   const [loadingData, setLoadingData] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
   // 기본 정보
   const [subject, setSubject] = useState("");
@@ -134,13 +163,17 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
   const [assumptions, setAssumptions] = useState([]);
   const [criteria, setCriteria] = useState([]);
   const [maxMembership, setMaxMembership] = useState(10);
+  const [maxMembershipInput, setMaxMembershipInput] = useState("10");
 
   // 투표 허용 정책
   const [assumptionAutoByVotes, setAssumptionAutoByVotes] = useState(true);
   const [assumptionMinVotes, setAssumptionMinVotes] = useState(3);
+  const [assumptionMinVotesInput, setAssumptionMinVotesInput] = useState("3");
   const [criteriaAutoByVotes, setCriteriaAutoByVotes] = useState(true);
   const [criteriaMinVotes, setCriteriaMinVotes] = useState(3);
+  const [criteriaMinVotesInput, setCriteriaMinVotesInput] = useState("3");
   const [conclusionApprovalPercent, setConclusionApprovalPercent] = useState(50);
+  const [conclusionApprovalPercentInput, setConclusionApprovalPercentInput] = useState("50");
 
   // 입장 정책
   const [membershipAutoApproved, setMembershipAutoApproved] = useState(true);
@@ -183,11 +216,15 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
             }))
           );
           setMaxMembership(data.max_membership || 10);
+          setMaxMembershipInput(String(data.max_membership || 10));
           setAssumptionAutoByVotes(data.assumption_is_auto_approved_by_votes ?? true);
           setAssumptionMinVotes(data.assumption_min_votes_required || 3);
+          setAssumptionMinVotesInput(String(data.assumption_min_votes_required || 3));
           setCriteriaAutoByVotes(data.criteria_is_auto_approved_by_votes ?? true);
           setCriteriaMinVotes(data.criteria_min_votes_required || 3);
+          setCriteriaMinVotesInput(String(data.criteria_min_votes_required || 3));
           setConclusionApprovalPercent(data.conclusion_approval_threshold_percent || 50);
+          setConclusionApprovalPercentInput(String(data.conclusion_approval_threshold_percent || 50));
           setMembershipAutoApproved(data.membership_is_auto_approved ?? true);
           setEntranceCode(data.entrance_code || "");
         }
@@ -211,11 +248,15 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
       setAssumptions([]);
       setCriteria([]);
       setMaxMembership(10);
+      setMaxMembershipInput("10");
       setAssumptionAutoByVotes(true);
       setAssumptionMinVotes(3);
+      setAssumptionMinVotesInput("3");
       setCriteriaAutoByVotes(true);
       setCriteriaMinVotes(3);
+      setCriteriaMinVotesInput("3");
       setConclusionApprovalPercent(50);
+      setConclusionApprovalPercentInput("50");
       setMembershipAutoApproved(true);
       setEntranceCode("");
       setErrorMsg("");
@@ -291,7 +332,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
   return (
     <ModalShell open={open} title="이벤트 설정" onClose={onClose}>
-      <div className="ec-modal-content" style={{marginTop: "-18px"}}>
+      <div className="ec-modal-body" style={{ padding: "var(--spacing-6) var(--spacing-6)" }}>
         {loadingData && (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <LoadingSpinner message="설정 정보를 불러오는 중..." />
@@ -301,22 +342,22 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
         {!loadingData && (
           <>
             {successMsg && <SuccessDisplay message={successMsg} onDismiss={() => setSuccessMsg("")} />}
-            {errorMsg && <ErrorDisplay message={errorMsg} dismissible onDismiss={() => setErrorMsg("")} />}
+            {errorMsg && <div className="ec-error">{errorMsg}</div>}
 
             {!canEditBasicInfo && (
-              <div className="ec-warning">
+              <div className="ec-error" style={{ background: "rgba(245, 158, 11, 0.1)", borderLeftColor: "var(--color-warning)" }}>
                 기본 정보는 이벤트가 시작되기 전(NOT_STARTED)에만 수정할 수 있습니다.
               </div>
             )}
 
             {eventStatus === "FINISHED" && (
-              <div className="ec-warning">
+              <div className="ec-error" style={{ background: "rgba(245, 158, 11, 0.1)", borderLeftColor: "var(--color-warning)" }}>
                 이벤트가 종료되어 일부 설정은 수정할 수 없습니다.
               </div>
             )}
 
             <div className="ec-section">
-              <h3 className="ec-section-title">기본 정보</h3>
+              <div className="ec-section-title">기본 정보</div>
 
               <FieldRow label="주제">
                 <input
@@ -324,54 +365,72 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={!canEditBasicInfo}
-                  placeholder="의사결정 주제"
                 />
               </FieldRow>
+              <div className="ec-spacer" />
 
               <ListEditor
                 label="선택지"
                 items={options}
                 setItems={setOptions}
                 max={MAX_OPTIONS}
-                placeholder="선택지 내용"
+                placeholder=""
                 min={1}
                 canEdit={canEditBasicInfo}
               />
+              <div className="ec-spacer" />
 
               <ListEditor
                 label="전제"
                 items={assumptions}
                 setItems={setAssumptions}
                 max={MAX_ASSUMPTIONS}
-                placeholder="전제 내용"
+                placeholder=""
                 min={0}
                 canEdit={canEditBasicInfo}
               />
+              <div className="ec-spacer" />
 
               <ListEditor
                 label="기준"
                 items={criteria}
                 setItems={setCriteria}
                 max={MAX_CRITERIA}
-                placeholder="기준 내용"
+                placeholder=""
                 min={0}
                 canEdit={canEditBasicInfo}
               />
+              <div className="ec-spacer" />
 
               <FieldRow label="최대 인원">
                 <input
-                  type="number"
-                  className="ec-input ec-input--small"
-                  value={maxMembership}
-                  onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
+                  className={`ec-input ec-input--small ${
+                    maxMembershipInput === ""
+                      ? ""
+                      : /^\d+$/.test(maxMembershipInput) && parseInt(maxMembershipInput, 10) >= 1
+                      ? "ec-input--valid"
+                      : "ec-input--invalid"
+                  }`}
+                  type="text"
+                  value={maxMembershipInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setMaxMembershipInput(val);
+                    if (/^\d+$/.test(val)) {
+                      const num = parseInt(val, 10);
+                      if (num >= 1) {
+                        setMaxMembership(num);
+                      }
+                    }
+                  }}
                   disabled={!canEditMaxMembership}
-                  min={1}
                 />
               </FieldRow>
             </div>
 
+            <div className="homepage-divider"/>
             <div className="ec-section ec-section--vote">
-              <h3 className="ec-section-title">투표 허용 정책</h3>
+              <div className="ec-section-title">투표 허용 정책</div>
 
               <FieldRow 
                 label={
@@ -389,12 +448,26 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                   <span className="ec-spacer-inline" />
                   <div className="ec-inline-label">허용하는 최소 투표수</div>
                   <input
-                    type="number"
-                    className="ec-input ec-input--small"
-                    min={1}
+                    className={`ec-input ec-input--small ${
+                      assumptionMinVotesInput === ""
+                        ? ""
+                        : /^\d+$/.test(assumptionMinVotesInput) && parseInt(assumptionMinVotesInput, 10) >= 1
+                        ? "ec-input--valid"
+                        : "ec-input--invalid"
+                    }`}
+                    type="text"
                     disabled={!assumptionAutoByVotes || !canEditPolicies}
-                    value={assumptionMinVotes}
-                    onChange={(e) => setAssumptionMinVotes(parseInt(e.target.value || "0", 10))}
+                    value={assumptionMinVotesInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAssumptionMinVotesInput(val);
+                      if (/^\d+$/.test(val)) {
+                        const num = parseInt(val, 10);
+                        if (num >= 1) {
+                          setAssumptionMinVotes(num);
+                        }
+                      }
+                    }}
                   />
                 </div>
               </FieldRow>
@@ -415,12 +488,26 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                   <span className="ec-spacer-inline" />
                   <div className="ec-inline-label">허용하는 최소 투표수</div>
                   <input
-                    type="number"
-                    className="ec-input ec-input--small"
-                    min={1}
+                    className={`ec-input ec-input--small ${
+                      criteriaMinVotesInput === ""
+                        ? ""
+                        : /^\d+$/.test(criteriaMinVotesInput) && parseInt(criteriaMinVotesInput, 10) >= 1
+                        ? "ec-input--valid"
+                        : "ec-input--invalid"
+                    }`}
+                    type="text"
                     disabled={!criteriaAutoByVotes || !canEditPolicies}
-                    value={criteriaMinVotes}
-                    onChange={(e) => setCriteriaMinVotes(parseInt(e.target.value || "0", 10))}
+                    value={criteriaMinVotesInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCriteriaMinVotesInput(val);
+                      if (/^\d+$/.test(val)) {
+                        const num = parseInt(val, 10);
+                        if (num >= 1) {
+                          setCriteriaMinVotes(num);
+                        }
+                      }
+                    }}
                   />
                 </div>
               </FieldRow>
@@ -432,22 +519,34 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                   </>
                 }
               >
-                <div className="ec-inline">
-                  <input
-                    type="number"
-                    className="ec-input ec-input--small"
-                    min={1}
-                    max={100}
-                    disabled={!canEditPolicies}
-                    value={conclusionApprovalPercent}
-                    onChange={(e) => setConclusionApprovalPercent(parseInt(e.target.value || "0", 10))}
-                  />
-                </div>
+                <input
+                  className={`ec-input ec-input--small ${
+                    conclusionApprovalPercentInput === ""
+                      ? ""
+                      : /^\d+$/.test(conclusionApprovalPercentInput) && parseInt(conclusionApprovalPercentInput, 10) >= 1 && parseInt(conclusionApprovalPercentInput, 10) <= 100
+                      ? "ec-input--valid"
+                      : "ec-input--invalid"
+                  }`}
+                  type="text"
+                  disabled={!canEditPolicies}
+                  value={conclusionApprovalPercentInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setConclusionApprovalPercentInput(val);
+                    if (/^\d+$/.test(val)) {
+                      const num = parseInt(val, 10);
+                      if (num >= 1 && num <= 100) {
+                        setConclusionApprovalPercent(num);
+                      }
+                    }
+                  }}
+                />
               </FieldRow>
             </div>
 
-            <div className="ec-section">
-              <h3 className="ec-section-title">입장 정책</h3>
+            <div className="homepage-divider"/>
+            <div className="ec-section ec-section--entry">
+              <div className="ec-section-title">입장 정책</div>
 
               <FieldRow label="가입 자동 승인">
                 <Toggle
@@ -458,23 +557,54 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
               </FieldRow>
 
               <FieldRow label="입장 코드">
-                <input
-                  className="ec-input"
-                  value={entranceCode}
-                  disabled
-                  style={{ background: "#f5f5f5", color: "#999" }}
-                />
-                <span className="ec-hint">입장 코드는 수정할 수 없습니다.</span>
+                <div 
+                  className="ec-input ec-input--code"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!entranceCode) return;
+                    try {
+                      await navigator.clipboard.writeText(entranceCode);
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 2000);
+                    } catch (err) {
+                      console.error('복사 실패:', err);
+                    }
+                  }}
+                  title="클릭하여 복사"
+                  style={{ 
+                    cursor: entranceCode ? 'pointer' : 'default',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--spacing-2)',
+                    userSelect: 'none'
+                  }}
+                >
+                  {entranceCode}
+                  {entranceCode && (
+                    <svg 
+                      className="event-code-icon" 
+                      width="14" 
+                      height="14" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  )}
+                </div>
               </FieldRow>
             </div>
 
-            <div className="ec-modal-actions">
+            <div className="ec-footer">
               <button type="button" className="dm-btn dm-btn--outline" onClick={onClose}>
                 취소
               </button>
               <button
                 type="button"
-                className="dm-btn dm-btn--primary"
+                className="dm-btn ec-create-btn"
                 onClick={handleSubmit}
                 disabled={loading}
               >
@@ -484,6 +614,12 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
           </>
         )}
       </div>
+
+      {showToast && (
+        <div className="toast-message">
+          복사되었습니다.
+        </div>
+      )}
     </ModalShell>
   );
 }

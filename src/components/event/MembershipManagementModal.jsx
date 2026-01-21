@@ -22,6 +22,8 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [sortField, setSortField] = useState(null); // 'status' | 'created_at' | 'joined_at'
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
 
   // 멤버십 목록 불러오기
   useEffect(() => {
@@ -81,6 +83,8 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
       setMemberships([]);
       setSelectedIds(new Set());
       setError("");
+      setSortField(null);
+      setSortDirection('asc');
     }
   }, [open]);
 
@@ -99,7 +103,19 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
         setMemberships(Array.isArray(data) ? data : []);
         onSuccess?.();
       } catch (err) {
-        setError(getErrorMessage(err));
+        const status = err?.status;
+        const message = err?.message || err?.data?.detail || err?.data?.message || "";
+        const messageLower = message.toLowerCase();
+        
+        // 최대 인원 초과 에러 처리 (400 에러이고 관련 키워드가 있으면)
+        if (status === 400 && (messageLower.includes("최대 인원") || messageLower.includes("max") || messageLower.includes("capacity") || messageLower.includes("full") || messageLower.includes("member") || messageLower.includes("exceed") || messageLower.includes("limit"))) {
+          setError("최대 인원을 초과하여 승인할 수 없습니다.");
+        } else if (status === 400) {
+          // 400 에러인데 메시지가 없거나 일반적인 경우
+          setError("승인할 수 없습니다. 최대 인원을 확인해주세요.");
+        } else {
+          setError(getErrorMessage(err));
+        }
       } finally {
         setLoading(false);
       }
@@ -138,14 +154,34 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
     setError("");
 
     try {
-      await membershipsApi.bulkApproveMemberships(eventId);
+      const result = await membershipsApi.bulkApproveMemberships(eventId);
       // 목록 새로고침
       const data = await membershipsApi.listMemberships(eventId);
       setMemberships(Array.isArray(data) ? data : []);
       setSelectedIds(new Set());
-      onSuccess?.();
+      
+      // 실패한 승인이 있는 경우 알림 표시
+      if (result?.failed_count && result.failed_count > 0) {
+        const approvedCount = result?.approved_count || 0;
+        const failedCount = result.failed_count;
+        setError(`${approvedCount}명이 승인되었습니다. ${failedCount}명은 최대 인원 초과로 승인되지 못했습니다.`);
+      } else {
+        onSuccess?.();
+      }
     } catch (err) {
-      setError(getErrorMessage(err));
+      const status = err?.status;
+      const message = err?.message || err?.data?.detail || err?.data?.message || "";
+      const messageLower = message.toLowerCase();
+      
+      // 최대 인원 초과 에러 처리 (400 에러이고 관련 키워드가 있으면)
+      if (status === 400 && (messageLower.includes("최대 인원") || messageLower.includes("max") || messageLower.includes("capacity") || messageLower.includes("full") || messageLower.includes("member") || messageLower.includes("exceed") || messageLower.includes("limit"))) {
+        setError("최대 인원을 초과하여 일괄 승인할 수 없습니다.");
+      } else if (status === 400) {
+        // 400 에러인데 메시지가 없거나 일반적인 경우
+        setError("일괄 승인할 수 없습니다. 최대 인원을 확인해주세요.");
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -159,12 +195,20 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
     setError("");
 
     try {
-      await membershipsApi.bulkRejectMemberships(eventId);
+      const result = await membershipsApi.bulkRejectMemberships(eventId);
       // 목록 새로고침
       const data = await membershipsApi.listMemberships(eventId);
       setMemberships(Array.isArray(data) ? data : []);
       setSelectedIds(new Set());
-      onSuccess?.();
+      
+      // 실패한 거부가 있는 경우 알림 표시 (API 스펙에 failed_count가 있으면)
+      if (result?.failed_count && result.failed_count > 0) {
+        const rejectedCount = result?.rejected_count || 0;
+        const failedCount = result.failed_count;
+        setError(`${rejectedCount}명이 거부되었습니다. ${failedCount}명은 거부되지 못했습니다.`);
+      } else {
+        onSuccess?.();
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -185,6 +229,47 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
     });
   }, []);
 
+  // 정렬 함수
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // 정렬된 멤버십 목록
+  const sortedMemberships = [...memberships].sort((a, b) => {
+    if (!sortField) return 0;
+    
+    let aVal, bVal;
+    switch (sortField) {
+      case 'status':
+        aVal = a.status || '';
+        bVal = b.status || '';
+        break;
+      case 'created_at':
+        aVal = a.created_at ? new Date(a.created_at).getTime() : 0;
+        bVal = b.created_at ? new Date(b.created_at).getTime() : 0;
+        break;
+      case 'joined_at':
+        aVal = a.joined_at ? new Date(a.joined_at).getTime() : 0;
+        bVal = b.joined_at ? new Date(b.joined_at).getTime() : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortField === 'status') {
+      return sortDirection === 'asc' 
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
+    } else {
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    }
+  });
+
   // PENDING 상태인 멤버십만 필터링
   const pendingMemberships = memberships.filter((m) => m.status === "PENDING");
   const hasPending = pendingMemberships.length > 0;
@@ -193,7 +278,9 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
-      return new Date(dateString).toLocaleString("ko-KR");
+      const formatted = new Date(dateString).toLocaleString("ko-KR");
+      // "오전" 또는 "오후" 앞에서 줄바꿈
+      return formatted.replace(/\s(오전|오후)/, '\n$1');
     } catch {
       return dateString;
     }
@@ -202,7 +289,33 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
   if (!open) return null;
 
   return (
-    <ModalShell open={open} title="멤버십 관리" onClose={onClose}>
+    <ModalShell 
+      open={open} 
+      title="멤버십 관리" 
+      onClose={onClose}
+      headerActions={
+        hasPending ? (
+          <>
+            <button
+              type="button"
+              className="dm-btn dm-btn--sm dm-btn--success"
+              onClick={handleBulkApprove}
+              disabled={loading}
+            >
+              {loading ? "처리 중..." : "일괄 승인"}
+            </button>
+            <button
+              type="button"
+              className="dm-btn dm-btn--sm dm-btn--danger"
+              onClick={handleBulkReject}
+              disabled={loading}
+            >
+              {loading ? "처리 중..." : "일괄 거부"}
+            </button>
+          </>
+        ) : null
+      }
+    >
       <div className="membership-modal-content" style={{marginTop: "-15px"}}>
         {loadingData && (
           <div style={{ textAlign: "center", padding: "40px" }}>
@@ -214,79 +327,96 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
           <>
             {error && <ErrorDisplay message={error} dismissible onDismiss={() => setError("")} />}
 
-            {hasPending && (
-              <div className="membership-bulk-actions">
-                <button
-                  type="button"
-                  className="dm-btn dm-btn--success"
-                  onClick={handleBulkApprove}
-                  disabled={loading}
-                >
-                  {loading ? "처리 중..." : "전체 승인"}
-                </button>
-                <button
-                  type="button"
-                  className="dm-btn dm-btn--danger"
-                  onClick={handleBulkReject}
-                  disabled={loading}
-                >
-                  {loading ? "처리 중..." : "전체 거부"}
-                </button>
-              </div>
-            )}
-
-            {!hasPending && (
+            {!hasPending && memberships.length === 0 && (
               <div className="membership-empty">
-                승인 대기 중인 멤버십이 없습니다.
+                멤버십이 없습니다.
               </div>
             )}
 
-            <div className="membership-list">
-              {memberships.map((membership) => (
-                <div key={membership.membership_id} className="membership-item">
-                  <div className="membership-info">
-                    <div className="membership-name-row">
-                      <span className="membership-name">{membership.name || "-"}</span>
-                      <MembershipStatusBadge status={membership.status} />
-                      {membership.is_admin && <span className="badge badge-admin">관리자</span>}
-                      {membership.is_me && <span className="badge badge-me">나</span>}
-                    </div>
-                    <div className="membership-email">{membership.email || "-"}</div>
-                    <div className="membership-dates">
-                      <span>신청: {formatDate(membership.created_at)}</span>
-                      {membership.joined_at && <span>승인: {formatDate(membership.joined_at)}</span>}
-                    </div>
+            {memberships.length > 0 && (
+              <>
+                <div className="membership-table-header">
+                  <div className="membership-table-col membership-table-col--name">이름</div>
+                  <div 
+                    className="membership-table-col membership-table-col--status sortable"
+                    onClick={() => handleSort('status')}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    상태
+                    {sortField === 'status' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </div>
-
-                  {membership.status === "PENDING" && (
-                    <div className="membership-actions">
-                      <button
-                        type="button"
-                        className="dm-btn dm-btn--sm dm-btn--success"
-                        onClick={() => handleApprove(membership.membership_id)}
-                        disabled={loading}
-                      >
-                        승인
-                      </button>
-                      <button
-                        type="button"
-                        className="dm-btn dm-btn--sm dm-btn--danger"
-                        onClick={() => handleReject(membership.membership_id)}
-                        disabled={loading}
-                      >
-                        거부
-                      </button>
-                    </div>
-                  )}
+                  <div 
+                    className="membership-table-col membership-table-col--date sortable"
+                    onClick={() => handleSort('created_at')}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    신청 일자
+                    {sortField === 'created_at' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                  <div 
+                    className="membership-table-col membership-table-col--date sortable"
+                    onClick={() => handleSort('joined_at')}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    승인 일자
+                    {sortField === 'joined_at' && (
+                      <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                  <div className="membership-table-col membership-table-col--actions">작업</div>
                 </div>
-              ))}
-            </div>
 
-            <div className="membership-modal-actions">
-              <button type="button" className="dm-btn dm-btn--outline" onClick={onClose}>
-                닫기
-              </button>
-            </div>
+                <div className="membership-list">
+                  {sortedMemberships.map((membership) => (
+                    <div key={membership.membership_id} className="membership-item">
+                      <div className="membership-table-col membership-table-col--name">
+                        <div className="membership-name-row">
+                          {membership.is_admin && <span className="badge badge-admin">관리자</span>}
+                          {membership.is_me && <span className="badge badge-me">나</span>}
+                          <span className="membership-name">{membership.name || "-"}</span>
+                        </div>
+                        <div className="membership-email">{membership.email || "-"}</div>
+                      </div>
+                      <div className="membership-table-col membership-table-col--status">
+                        <MembershipStatusBadge status={membership.status} />
+                      </div>
+                      <div className="membership-table-col membership-table-col--date">
+                        {formatDate(membership.created_at)}
+                      </div>
+                      <div className="membership-table-col membership-table-col--date">
+                        {membership.joined_at ? formatDate(membership.joined_at) : "-"}
+                      </div>
+                      <div className="membership-table-col membership-table-col--actions">
+                        {membership.status === "PENDING" && (
+                          <div className="membership-actions">
+                            <button
+                              type="button"
+                              className="dm-btn dm-btn--xs dm-btn--success"
+                              onClick={() => handleApprove(membership.membership_id)}
+                              disabled={loading}
+                            >
+                              승인
+                            </button>
+                            <button
+                              type="button"
+                              className="dm-btn dm-btn--xs dm-btn--danger"
+                              onClick={() => handleReject(membership.membership_id)}
+                              disabled={loading}
+                            >
+                              거부
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

@@ -87,12 +87,17 @@ export default function EventPage() {
       const data = await eventsApi.getEventDetail(eventId);
       setDetail(data);
     } catch (err) {
+      // 이벤트가 삭제된 경우 (404) 홈으로 리디렉션
+      if (err?.status === 404) {
+        navigate("/home");
+        return;
+      }
       setErrMsg(err?.message || "이벤트 정보를 불러오지 못했습니다.");
     } finally {
       inFlightRef.current = false;
       setLoading(false);
     }
-  }, [eventId]);
+  }, [eventId, navigate]);
 
     const {
     composer, draftContent, draftReason,

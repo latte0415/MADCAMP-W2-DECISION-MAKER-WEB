@@ -116,7 +116,7 @@ export default function CriteriaSection({
   currentUserId,
   onCommentUpdate,
 }) {
-  const list = Array.isArray(criteria) ? criteria : [];
+  const list = Array.isArray(criteria) ? criteria.filter((c) => !c?.is_deleted) : [];
   const creates = Array.isArray(creationProposals) ? creationProposals : [];
   const commentsMap = commentsByCriterionId || {};
 
