@@ -1,6 +1,9 @@
 .home-root {
-  min-height: 100vh;
+  height: 100vh;          /* was min-height */
   background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;       /* prevents the body from scrolling */
 }
 
 .home-topbar {
@@ -57,8 +60,12 @@
 
 .home-main {
   padding: 0 28px 28px 28px;
+  flex: 1 1 auto;
+  min-height: 0;          /* IMPORTANT for nested scrolling */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;       /* so only event-list scrolls */
 }
-
 .home-loading,
 .home-empty,
 .home-error {
@@ -75,8 +82,11 @@
   flex-direction: column;
   gap: 14px;
   margin-top: 8px;
-}
 
+  flex: 1 1 auto;
+  min-height: 0;          /* IMPORTANT */
+  overflow-y: auto;
+}
 .event-card {
   width: 100%;
   border: 2px solid #bfbfbf;

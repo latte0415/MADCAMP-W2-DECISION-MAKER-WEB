@@ -360,6 +360,7 @@ export default function EventPage() {
     setVoteResultLoading(false);
   }, [eventId]);
 
+  const delay = (ms) => new Promise((r) => setTimeout(r, ms));
   useEffect(() => {
     if (!eventId) return;
     if (detail?.event_status !== "FINISHED") return;
@@ -371,6 +372,7 @@ export default function EventPage() {
       setVoteResultLoading(true);
       setVoteResultErr("");
       try {
+        await delay(500);
         const res = await eventsApi.getVoteResult(eventId);
         setVoteResult(res);
       } catch (e) {
