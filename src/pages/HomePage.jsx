@@ -116,7 +116,7 @@ export default function HomePage() {
   useEffect(() => {
     if (bootstrapping) return;
 
-    const POLL_MS = 3000;
+    const POLL_MS = 1750;
     const id = setInterval(fetchEvents, POLL_MS);
     return () => clearInterval(id);
   }, [bootstrapping, fetchEvents]);
@@ -144,6 +144,31 @@ export default function HomePage() {
       alive = false;
     };
   }, [overviewEventId]);
+
+  // Poll overview when modal is open to update membership status
+  useEffect(() => {
+    if (!overviewEventId || !overview) return;
+
+    const POLL_MS = 1750;
+    const id = setInterval(async () => {
+      try {
+        const data = await eventsApi.getEventOverview(overviewEventId);
+        setOverview(prev => {
+          // Only update if membership_status or participant_count changed to minimize flicker
+          if (prev?.membership_status !== data?.membership_status || 
+              prev?.participant_count !== data?.participant_count) {
+            return data;
+          }
+          return prev;
+        });
+      } catch (err) {
+        // Silently fail on polling errors to avoid disrupting the user
+        console.error("Overview poll failed:", err);
+      }
+    }, POLL_MS);
+
+    return () => clearInterval(id);
+  }, [overviewEventId, overview]);
 
 
   const emptyState = useMemo(() => !loading && !errMsg && events.length === 0, [loading, errMsg, events]);

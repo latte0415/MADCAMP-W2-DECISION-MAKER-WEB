@@ -9,6 +9,7 @@ export default function AssumptionsSection({
   onOpenComposer,
   isAdmin = false,
   eventId,
+  eventStatus,
   onProposalStatusChange,
 }) {
   const list = Array.isArray(assumptions) ? assumptions : [];
@@ -38,7 +39,7 @@ export default function AssumptionsSection({
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
           onClick={() => onToggleVote?.(p)}
-          disabled={isVoting?.(p?.id)}
+          disabled={isVoting?.(p?.id) || eventStatus !== "IN_PROGRESS"}
         >
           {hasVoted ? "철회" : "동의"}
         </button>
@@ -83,6 +84,7 @@ export default function AssumptionsSection({
                           proposalId={p?.id}
                           proposalType="assumption"
                           currentStatus={p?.proposal_status}
+                          eventStatus={eventStatus}
                           onStatusChange={onProposalStatusChange}
                         />
                       )}
@@ -97,6 +99,7 @@ export default function AssumptionsSection({
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
                 onClick={() => onOpenComposer?.({ scope: "assumption", action: "modify", targetIndex: idx, targetId: a.id })}
+                disabled={eventStatus !== "IN_PROGRESS"}
               >
                 수정 제안
               </button>
@@ -104,6 +107,7 @@ export default function AssumptionsSection({
                 type="button"
                 className="dm-btn dm-btn--sm dm-btn--outline"
                 onClick={() =>  onOpenComposer?.({ scope: "assumption", action: "delete", targetIndex: idx, targetId: a.id })}
+                disabled={eventStatus !== "IN_PROGRESS"}
               >
                 삭제 제안
               </button>

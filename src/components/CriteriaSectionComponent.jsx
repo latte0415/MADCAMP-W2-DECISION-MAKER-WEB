@@ -111,6 +111,7 @@ export default function CriteriaSection({
   setOpenCriteriaIds,
   isAdmin = false,
   eventId,
+  eventStatus,
   onProposalStatusChange,
   currentUserId,
   onCommentUpdate,
@@ -144,49 +145,53 @@ export default function CriteriaSection({
     });
   }, []);
 
-  function renderVoteArea(p) {
+function renderVoteArea(p) {
+  const voteCount = p?.vote_info?.vote_count ?? 0;
+  const hasVoted = !!p?.vote_info?.has_voted;
 
-    const voteCount = p?.vote_info?.vote_count ?? 0;
-    const hasVoted = !!p?.vote_info?.has_voted;
-
-    return (
-      <div className="ass-vote">
-        <div className="ass-vote-count">
-          {voteCount}/{participantCount}
-        </div>
-        <button
-          type="button"
-          className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onToggleVote?.(p)}
-          disabled={isVoting?.(p?.id)}
-        >
-          {hasVoted ? "철회" : "동의"}
-        </button>
+  return (
+    <div className="ass-vote" onClick={(e) => e.stopPropagation()}>
+      <div className="ass-vote-count">
+        {voteCount}/{participantCount}
       </div>
-    );
-  }
+      <button
+        type="button"
+        className="dm-btn dm-btn--outline dm-btn--xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleVote?.(p);
+        }}
+        disabled={isVoting?.(p?.id) || eventStatus !== "IN_PROGRESS"}
+      >
+        {hasVoted ? "철회" : "동의"}
+      </button>
+    </div>
+  );
+}
 
-  // conclusion votes: vote_count / participantCount (vote UI only for PENDING)
-  function renderConclusionVote(p) {
-    const voteCount = p?.vote_info?.vote_count ?? 0;
-    const hasVoted = !!p?.vote_info?.has_voted;
+function renderConclusionVote(p) {
+  const voteCount = p?.vote_info?.vote_count ?? 0;
+  const hasVoted = !!p?.vote_info?.has_voted;
 
-    return (
-      <div className="ass-vote">
-        <div className="ass-vote-count">
-          {voteCount}/{participantCount || "-"}
-        </div>
-        <button
-          type="button"
-          className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onToggleConclusionVote?.(p)}
-          disabled={isConclusionVoting?.(p?.id)}
-        >
-          {hasVoted ? "철회" : "동의"}
-        </button>
+  return (
+    <div className="ass-vote" onClick={(e) => e.stopPropagation()}>
+      <div className="ass-vote-count">
+        {voteCount}/{participantCount || "-"}
       </div>
-    );
-  }
+      <button
+        type="button"
+        className="dm-btn dm-btn--outline dm-btn--xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleConclusionVote?.(p);
+        }}
+        disabled={isConclusionVoting?.(p?.id) || eventStatus !== "IN_PROGRESS"}
+      >
+        {hasVoted ? "철회" : "동의"}
+      </button>
+    </div>
+  );
+}
 
   function conclusionStatusLabel(status) {
     if (status === "PENDING") return "투표중";
@@ -216,22 +221,30 @@ export default function CriteriaSection({
               <div className="ass-num">{idx + 1}</div>
 
               <div
-                className="ass-body"
-                onClick={() =>
+                onClick={(e) => {
+                  // If the click came from any interactive control inside the card, do nothing.
+                  if (
+                    e.target.closest(
+                      "button, a, input, select, textarea, .ass-vote, .ass-actions, .cr-comments-toggle"
+                    )
+                  ) {
+                    return;
+                  }
+
                   onOpenComposer?.({
                     scope: "criteria",
                     action: "comment",
                     targetIndex: idx,
                     targetId: cid,
-                  })
-                }
+                  });
+                }}
                 role="button"
                 tabIndex={0}
               >
                 <div className="ass-title">{c?.content ?? "-"}</div>
 
                 {pending.length > 0 && (
-                  <div className="ass-proposals">
+                  <div className="ass-proposals"  onClick={(e) => e.stopPropagation()}>
                     {pending.map((p) => (
                       <div key={p?.id} className="ass-proposal-row">
                         <div className="ass-tag">{proposalTag(p)}</div>
@@ -254,6 +267,7 @@ export default function CriteriaSection({
                             proposalId={p?.id}
                             proposalType="criteria"
                             currentStatus={p?.proposal_status}
+                            eventStatus={eventStatus}
                             onStatusChange={onProposalStatusChange}
                           />
                         )}
@@ -275,6 +289,7 @@ export default function CriteriaSection({
                       targetId: cid,
                     })
                   }
+                  disabled={eventStatus !== "IN_PROGRESS"}
                 >
                   결론 제안
                 </button>
@@ -290,6 +305,7 @@ export default function CriteriaSection({
                       targetId: cid,
                     })
                   }
+                  disabled={eventStatus !== "IN_PROGRESS"}
                 >
                   수정 제안
                 </button>
@@ -305,6 +321,7 @@ export default function CriteriaSection({
                       targetId: cid,
                     })
                   }
+                  disabled={eventStatus !== "IN_PROGRESS"}
                 >
                   삭제 제안
                 </button>
@@ -374,6 +391,7 @@ export default function CriteriaSection({
                         proposalId={p?.id}
                         proposalType="conclusion"
                         currentStatus={p?.proposal_status}
+                        eventStatus={eventStatus}
                         onStatusChange={onProposalStatusChange}
                       />
                     )}
@@ -409,6 +427,7 @@ export default function CriteriaSection({
                     eventId={eventId}
                     proposalId={p?.id}
                     proposalType="criteria"
+                    eventStatus={eventStatus}
                     currentStatus={p?.proposal_status}
                     onStatusChange={onProposalStatusChange}
                   />

@@ -3,7 +3,8 @@
    ============================================ */
 
 .membership-modal-content {
-  padding: var(--spacing-5);
+  padding: var(--spacing-2);
+  margin-left: -20px;
   min-width: 600px;
   max-width: 800px;
   width: 100%;
@@ -21,6 +22,7 @@
 .membership-empty {
   text-align: center;
   padding: var(--spacing-10);
+  margin-bottom: 10px;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-body);
   font-style: italic;

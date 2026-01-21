@@ -4,7 +4,7 @@
 
 .ec-modal-card {
   position: relative;
-  width: min(900px, 94vw);
+  width: min(750px, 95vw);
   max-height: min(90vh, 800px);
   overflow: hidden;
   background: var(--color-white);
@@ -117,7 +117,7 @@
 
 .ec-row {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: minmax(120px, auto) 1fr;
   align-items: start;
   gap: var(--spacing-4);
   margin-bottom: var(--spacing-4);
@@ -132,6 +132,7 @@
   font-size: var(--font-size-body);
   padding-top: var(--spacing-2);
   color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 .ec-control {
@@ -301,8 +302,22 @@
   margin-bottom: 0;
 }
 
+/* ---- Vote policy rows: prevent label text from overlapping controls ---- */
 .ec-section--vote .ec-row {
-  grid-template-columns: 200px 1fr;
+  /* give the label more room; controls shift to the right automatically */
+  grid-template-columns: minmax(190px, 240px) 1fr;
+  column-gap: var(--spacing-6);
+}
+
+.ec-section--vote .ec-label {
+  /* override the global nowrap so long Korean can wrap inside the label column */
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* Optional: a little breathing room for the control column */
+.ec-section--vote .ec-control {
+  padding-left: var(--spacing-1);
 }
 
 .ec-section--entry .ec-row {
@@ -325,6 +340,16 @@
   display: inline-block;
   width: var(--spacing-4);
   flex-shrink: 0;
+}
+
+.ec-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
+  gap: 10px;
 }
 
 .homepage-divider {

@@ -49,6 +49,32 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
     };
   }, [open, eventId]);
 
+  // Poll membership list when modal is open to show new join requests
+  useEffect(() => {
+    if (!open || !eventId) return;
+
+    const POLL_MS = 1750;
+    const id = setInterval(async () => {
+      try {
+        const data = await membershipsApi.listMemberships(eventId);
+        setMemberships(prev => {
+          // Only update if the membership list actually changed (new items, status changes)
+          const prevJson = JSON.stringify(prev);
+          const newJson = JSON.stringify(data);
+          if (prevJson !== newJson) {
+            return Array.isArray(data) ? data : [];
+          }
+          return prev;
+        });
+      } catch (err) {
+        // Silently fail on polling errors
+        console.error("Membership list poll failed:", err);
+      }
+    }, POLL_MS);
+
+    return () => clearInterval(id);
+  }, [open, eventId]);
+
   // 모달이 닫힐 때 상태 초기화
   useEffect(() => {
     if (!open) {
@@ -177,7 +203,7 @@ export default function MembershipManagementModal({ open, eventId, onClose, onSu
 
   return (
     <ModalShell open={open} title="멤버십 관리" onClose={onClose}>
-      <div className="membership-modal-content">
+      <div className="membership-modal-content" style={{marginTop: "-15px"}}>
         {loadingData && (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <LoadingSpinner message="멤버십 정보를 불러오는 중..." />

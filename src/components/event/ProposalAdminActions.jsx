@@ -12,9 +12,10 @@ import { ErrorDisplay, getErrorMessage } from "../common/ErrorDisplay";
  * @param {string} proposalId - 제안 ID
  * @param {string} proposalType - 제안 타입 (assumption, criteria, conclusion)
  * @param {string} currentStatus - 현재 제안 상태
+ * @param {string} eventStatus - 이벤트 상태 (IN_PROGRESS만 활성화)
  * @param {Function} onStatusChange - 상태 변경 성공 핸들러
  */
-export function ProposalAdminActions({ eventId, proposalId, proposalType, currentStatus, onStatusChange }) {
+export function ProposalAdminActions({ eventId, proposalId, proposalType, currentStatus, eventStatus, onStatusChange }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,6 +23,8 @@ export function ProposalAdminActions({ eventId, proposalId, proposalType, curren
   if (currentStatus !== "PENDING") {
     return null;
   }
+
+  const isDisabled = eventStatus !== "IN_PROGRESS";
 
   const handleStatusChange = async (status) => {
     if (!eventId || !proposalId) return;
@@ -65,7 +68,7 @@ export function ProposalAdminActions({ eventId, proposalId, proposalType, curren
           type="button"
           className="dm-btn dm-btn--sm dm-btn--success"
           onClick={() => handleStatusChange("ACCEPTED")}
-          disabled={loading}
+          disabled={loading || isDisabled}
         >
           {loading ? "처리 중..." : "승인"}
         </button>
@@ -73,7 +76,7 @@ export function ProposalAdminActions({ eventId, proposalId, proposalType, curren
           type="button"
           className="dm-btn dm-btn--sm dm-btn--danger"
           onClick={() => handleStatusChange("REJECTED")}
-          disabled={loading}
+          disabled={loading || isDisabled}
         >
           {loading ? "처리 중..." : "거부"}
         </button>

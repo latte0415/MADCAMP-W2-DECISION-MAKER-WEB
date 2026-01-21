@@ -16,13 +16,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-6) var(--spacing-10);
+  padding: var(--spacing-6) var(--spacing-6);
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-white);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .event-brand {
@@ -47,12 +49,13 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--spacing-10);
+  padding: var(--spacing-8) var(--spacing-6);
   background: var(--color-bg-secondary);
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   scroll-behavior: smooth;
+  box-sizing: border-box;
 }
 
 /* 반응형 디자인 개선 */
@@ -193,9 +196,10 @@
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
   background: var(--color-white);
-  padding: var(--spacing-7) var(--spacing-8);
+  padding: var(--spacing-6) var(--spacing-6);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+  box-sizing: border-box;
 }
 
 .event-info-card:hover {
@@ -205,9 +209,9 @@
 
 .event-info-row {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: var(--spacing-6);
-  margin: var(--spacing-5) 0;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  gap: var(--spacing-4);
+  margin: var(--spacing-4) 0;
   align-items: start;
 }
 
@@ -414,7 +418,7 @@
   grid-template-columns: auto 1fr auto auto;
   gap: var(--spacing-5);
   align-items: center;
-  width: 100%;
+  width: 90%;
   transition: all var(--transition-base);
 }
 
@@ -785,4 +789,17 @@
   gap: var(--spacing-3);
   margin-top: var(--spacing-4);
   justify-content: flex-end;
+}
+
+.ass-body::before,
+.ass-body::after,
+.ass-card::before,
+.ass-card::after {
+  pointer-events: none;
+}
+
+/* Ensure vote area sits above any decorative layers */
+.ass-vote {
+  position: relative;
+  z-index: 2;
 }

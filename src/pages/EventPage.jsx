@@ -99,7 +99,6 @@ export default function EventPage() {
     composerErr, composerSubmitting,
     openComposer, closeComposer, submitComposer,
     setDraftContent, setDraftReason,
-    commentRefresh,
   } = useProposalComposer({ eventId, fetchDetail });
 
 
@@ -159,19 +158,19 @@ export default function EventPage() {
     setLoading(true);
     setDetail(null);
     fetchDetail();
-  }, [fetchDetail]);
+  }, [eventId, fetchDetail]);
 
-  // polling every 1.5 seconds
+  // polling every 1.75 seconds (but skip when voting modal is open to avoid flickering)
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || voteOpen) return;
 
-    const POLL_MS = 1500;
+    const POLL_MS = 1750;
     const id = setInterval(() => {
       fetchDetail();
     }, POLL_MS);
 
     return () => clearInterval(id);
-  }, [eventId, fetchDetail]);
+  }, [eventId, voteOpen, fetchDetail]);
 
   // comment polling.
   useEffect(() => {
@@ -181,7 +180,7 @@ export default function EventPage() {
     // initial immediate fetch (so it doesn’t wait 1.5s)
     openCriteriaIds.forEach((id) => fetchCommentsForCriterion(id));
 
-    const POLL_MS = 1500;
+    const POLL_MS = 1750;
     const id = setInterval(() => {
       openCriteriaIds.forEach((id) => fetchCommentsForCriterion(id));
     }, POLL_MS);
@@ -325,7 +324,7 @@ export default function EventPage() {
         <section className="event-section">
           <div className="event-section-head">
             <h2 className="event-section-title">전제</h2>
-            <button className="dm-btn dm-btn--sm" type="button" onClick={() => { openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null }); }}>
+            <button className="dm-btn dm-btn--sm" type="button" onClick={() => { openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null }); }} disabled={eventStatus !== "IN_PROGRESS"}>
               추가하기
             </button>
           </div>
@@ -340,6 +339,7 @@ export default function EventPage() {
             onOpenComposer={openComposer}
             isAdmin={detail?.is_admin}
             eventId={eventId}
+            eventStatus={eventStatus}
             onProposalStatusChange={fetchDetail}
           />
         </section>
@@ -351,6 +351,7 @@ export default function EventPage() {
               className="dm-btn dm-btn--sm"
               type="button"
               onClick={() => openComposer({ scope: "criteria", action: "create", targetIndex: null, targetId: null })}
+              disabled={eventStatus !== "IN_PROGRESS"}
             >
               추가하기
             </button>
@@ -360,16 +361,16 @@ export default function EventPage() {
             criteria={detail?.criteria}
             creationProposals={detail?.criteria_creation_proposals}
             participantCount={participantCount}
-            onToggleCriteriaVote={toggleCriteriaVote}
-            isCriteriaVoting={isCriteriaVoting}
+            onToggleVote={toggleCriteriaVote}
+            isVoting={isCriteriaVoting}
             onToggleConclusionVote={toggleConclusionVote}
             isConclusionVoting={isConclusionVoting}
             onOpenComposer={openComposer}
-            commentRefresh={commentRefresh}
             commentsByCriterionId={commentsByCriterionId}
             setOpenCriteriaIds={setOpenCriteriaIds}
             isAdmin={detail?.is_admin}
             eventId={eventId}
+            eventStatus={eventStatus}
             onProposalStatusChange={fetchDetail}
             currentUserId={user?.id}
             onCommentUpdate={fetchCommentsForCriterion}

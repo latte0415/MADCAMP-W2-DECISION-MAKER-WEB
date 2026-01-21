@@ -18,11 +18,6 @@ export default function VoteResultDisplay({ eventId, eventStatus }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // FINISHED 상태가 아니면 표시하지 않음
-  if (eventStatus !== "FINISHED") {
-    return null;
-  }
-
   useEffect(() => {
     if (!eventId || eventStatus !== "FINISHED") return;
 
@@ -45,6 +40,11 @@ export default function VoteResultDisplay({ eventId, eventStatus }) {
       alive = false;
     };
   }, [eventId, eventStatus]);
+
+  // FINISHED 상태가 아니면 표시하지 않음
+  if (eventStatus !== "FINISHED") {
+    return null;
+  }
 
   if (loading) {
     return (

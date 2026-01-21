@@ -2,19 +2,17 @@
  * 이벤트 설정 모달 컴포넌트 (관리자용)
  * EventCreationModal과 유사하지만 기존 데이터를 수정하는 형태
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ModalShell from "../ModalShell";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 import { ErrorDisplay, getErrorMessage } from "../common/ErrorDisplay";
+import { SuccessDisplay } from "../common/SuccessDisplay";
 import * as eventsApi from "../../api/events";
 
 const MAX_OPTIONS = 5;
 const MAX_ASSUMPTIONS = 10;
 const MAX_CRITERIA = 10;
 
-function trimNonEmpty(list) {
-  return list.map((s) => s.trim()).filter((s) => s.length > 0);
-}
 
 function FieldRow({ label, children }) {
   return (
@@ -128,6 +126,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   // 기본 정보
   const [subject, setSubject] = useState("");
@@ -227,6 +226,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
   const handleSubmit = useCallback(async () => {
     setLoading(true);
     setErrorMsg("");
+    setSuccessMsg("");
 
     try {
       const payload = {};
@@ -259,8 +259,9 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
       }
 
       await eventsApi.updateEvent(eventId, payload);
+      setSuccessMsg("수정이 완료되었습니다.");
       onSuccess?.();
-      onClose();
+      // Don't close the modal - let user continue editing if needed
     } catch (err) {
       setErrorMsg(getErrorMessage(err));
     } finally {
@@ -290,7 +291,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
   return (
     <ModalShell open={open} title="이벤트 설정" onClose={onClose}>
-      <div className="ec-modal-content">
+      <div className="ec-modal-content" style={{marginTop: "-18px"}}>
         {loadingData && (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <LoadingSpinner message="설정 정보를 불러오는 중..." />
@@ -299,6 +300,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
         {!loadingData && (
           <>
+            {successMsg && <SuccessDisplay message={successMsg} onDismiss={() => setSuccessMsg("")} />}
             {errorMsg && <ErrorDisplay message={errorMsg} dismissible onDismiss={() => setErrorMsg("")} />}
 
             {!canEditBasicInfo && (
@@ -359,78 +361,95 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
               <FieldRow label="최대 인원">
                 <input
                   type="number"
-                  className="ec-input"
+                  className="ec-input ec-input--small"
                   value={maxMembership}
-                  onChange={(e) => setMaxMembership(parseInt(e.target.value, 10) || 1)}
+                  onChange={(e) => setMaxMembership(parseInt(e.target.value || "0", 10))}
                   disabled={!canEditMaxMembership}
                   min={1}
                 />
               </FieldRow>
             </div>
 
-            <div className="ec-section">
+            <div className="ec-section ec-section--vote">
               <h3 className="ec-section-title">투표 허용 정책</h3>
 
-              <FieldRow label="투표로 전제 제안/편집 허용하기">
-                <Toggle
-                  checked={assumptionAutoByVotes}
-                  onChange={setAssumptionAutoByVotes}
-                  disabled={!canEditPolicies}
-                />
-              </FieldRow>
-
-              {assumptionAutoByVotes && (
-                <FieldRow label="전제 제안/편집 허용하는 최소 투표 수">
+              <FieldRow 
+                label={
+                  <>
+                    전제 <span className="ec-label-sep">|</span> 투표로 제안/편집 허용하기
+                  </>
+                }
+              >
+                <div className="ec-inline">
+                  <Toggle 
+                    checked={assumptionAutoByVotes} 
+                    onChange={setAssumptionAutoByVotes}
+                    disabled={!canEditPolicies}
+                  />
+                  <span className="ec-spacer-inline" />
+                  <div className="ec-inline-label">허용하는 최소 투표수</div>
                   <input
                     type="number"
-                    className="ec-input"
+                    className="ec-input ec-input--small"
+                    min={1}
+                    disabled={!assumptionAutoByVotes || !canEditPolicies}
                     value={assumptionMinVotes}
-                    onChange={(e) => setAssumptionMinVotes(parseInt(e.target.value, 10) || 1)}
-                    disabled={!canEditPolicies}
-                    min={1}
+                    onChange={(e) => setAssumptionMinVotes(parseInt(e.target.value || "0", 10))}
                   />
-                </FieldRow>
-              )}
-
-              <FieldRow label="투표로 기준 제안/편집 허용하기">
-                <Toggle
-                  checked={criteriaAutoByVotes}
-                  onChange={setCriteriaAutoByVotes}
-                  disabled={!canEditPolicies}
-                />
+                </div>
               </FieldRow>
 
-              {criteriaAutoByVotes && (
-                <FieldRow label="기준 제안/편집 허용하는 최소 투표 수">
+              <FieldRow 
+                label={
+                  <>
+                    기준 <span className="ec-label-sep">|</span> 투표로 제안/편집 허용하기
+                  </>
+                }
+              >
+                <div className="ec-inline">
+                  <Toggle 
+                    checked={criteriaAutoByVotes} 
+                    onChange={setCriteriaAutoByVotes}
+                    disabled={!canEditPolicies}
+                  />
+                  <span className="ec-spacer-inline" />
+                  <div className="ec-inline-label">허용하는 최소 투표수</div>
                   <input
                     type="number"
-                    className="ec-input"
-                    value={criteriaMinVotes}
-                    onChange={(e) => setCriteriaMinVotes(parseInt(e.target.value, 10) || 1)}
-                    disabled={!canEditPolicies}
+                    className="ec-input ec-input--small"
                     min={1}
+                    disabled={!criteriaAutoByVotes || !canEditPolicies}
+                    value={criteriaMinVotes}
+                    onChange={(e) => setCriteriaMinVotes(parseInt(e.target.value || "0", 10))}
                   />
-                </FieldRow>
-              )}
+                </div>
+              </FieldRow>
 
-              <FieldRow label="결론이 승인되는 최소 동의 투표 퍼센티지">
-                <input
-                  type="number"
-                  className="ec-input"
-                  value={conclusionApprovalPercent}
-                  onChange={(e) => setConclusionApprovalPercent(parseInt(e.target.value, 10) || 1)}
-                  disabled={!canEditPolicies}
-                  min={1}
-                  max={100}
-                />
-                <span className="ec-hint">%</span>
+              <FieldRow 
+                label={
+                  <>
+                    결론 <span className="ec-label-sep">|</span> 승인되는 동의 최소 퍼센티지
+                  </>
+                }
+              >
+                <div className="ec-inline">
+                  <input
+                    type="number"
+                    className="ec-input ec-input--small"
+                    min={1}
+                    max={100}
+                    disabled={!canEditPolicies}
+                    value={conclusionApprovalPercent}
+                    onChange={(e) => setConclusionApprovalPercent(parseInt(e.target.value || "0", 10))}
+                  />
+                </div>
               </FieldRow>
             </div>
 
             <div className="ec-section">
               <h3 className="ec-section-title">입장 정책</h3>
 
-              <FieldRow label="가입 승인 자동 여부">
+              <FieldRow label="가입 자동 승인">
                 <Toggle
                   checked={membershipAutoApproved}
                   onChange={setMembershipAutoApproved}

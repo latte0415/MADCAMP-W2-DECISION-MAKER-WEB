@@ -175,6 +175,18 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
     loading,
   ]);
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   async function onGenerateCode() {
@@ -236,18 +248,6 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
       setLoading(false);
     }
   }
-
-  // ESC 키로 모달 닫기
-  useEffect(() => {
-    if (!open) return;
-    const handleEscape = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [open, onClose]);
 
   return (
     <div 

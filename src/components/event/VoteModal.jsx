@@ -175,7 +175,7 @@ export default function VoteModal({ open, eventId, options = [], criteria = [], 
             {error && <ErrorDisplay message={error} dismissible onDismiss={() => setError("")} />}
 
             <div className="vote-section">
-              <h3 className="vote-section-title">선택지 선택</h3>
+              <h3 className="vote-section-title" style={{marginTop: "-30px"}}>선택지 선택</h3>
               <div className="vote-options">
                 {options.map((option) => (
                   <button
