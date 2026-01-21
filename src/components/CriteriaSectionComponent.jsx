@@ -57,7 +57,10 @@ export default function CriteriaSection({
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onAdminCriteriaDecision?.(p, "ACCEPTED")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdminCriteriaDecision?.(p, "ACCEPTED");
+          }}
           disabled={busy}
         >
           승인
@@ -65,7 +68,10 @@ export default function CriteriaSection({
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onAdminCriteriaDecision?.(p, "REJECTED")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdminCriteriaDecision?.(p, "REJECTED");
+          }}
           disabled={busy}
         >
           거부
@@ -84,7 +90,10 @@ export default function CriteriaSection({
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onAdminConclusionDecision?.(p, "ACCEPTED")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdminConclusionDecision?.(p, "ACCEPTED");
+          }}
           disabled={busy}
         >
           승인
@@ -92,7 +101,10 @@ export default function CriteriaSection({
         <button
           type="button"
           className="dm-btn dm-btn--outline dm-btn--xs"
-          onClick={() => onAdminConclusionDecision?.(p, "REJECTED")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdminConclusionDecision?.(p, "REJECTED");
+          }}
           disabled={busy}
         >
           거부
