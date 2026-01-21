@@ -137,29 +137,27 @@ export default function AssumptionsSection({
         .filter((p) => p?.proposal_status === "PENDING" && p?.proposal_category === "CREATION")
         .map((p, i) => {
           return (
-            <div key={p?.id ?? `create-${i}`} className="ass-card ass-card--create">
-              <div className="ass-num">{"-"}</div>
+            <div
+              key={p?.id ?? `create-${i}`}
+              className="ass-card ass-card--proposal"   // <- new modifier (yellow)
+            >
+              <div className="ass-num ass-num--proposal">추가</div>
 
               <div className="ass-body">
-                <div className="ass-title">{"제안된 전제입니다."}</div>
-                <div className="ass-proposals">
-                  <div className="ass-proposal-row">
-                    <div className="ass-tag">추가</div>
+                {/* Title area becomes the proposal content */}
+                <div className="ass-title">{p?.proposal_content ?? "-"}</div>
 
-                    <div className="ass-proposal-text">
-                      <div className="ass-proposal-content">{p?.proposal_content ?? "-"}</div>
-                      <div className="ass-proposal-reason">{p?.reason ?? "-"}</div>
-                    </div>
-
-                    <div className="vote-and-admin">
-                      {renderVoteArea(p)}
-                      {renderAdminDecisionButtons(p)}
-                    </div>
-                  </div>
-                </div>
+                {/* Small subtext below becomes the reason */}
+                <div className="ass-subtitle">{p?.reason ?? "-"}</div>
               </div>
 
-              <div className="ass-actions" />
+              {/* Put vote/admin on the right (same “3rd column” as ass-actions) */}
+              <div className="ass-actions ass-actions--proposal">
+                <div className="vote-and-admin">
+                  {renderVoteArea(p)}
+                  {renderAdminDecisionButtons(p)}
+                </div>
+              </div>
             </div>
           );
         })}

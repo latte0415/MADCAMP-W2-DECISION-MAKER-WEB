@@ -143,6 +143,30 @@
   font-size: 13px;
 }
 
+.ass-card--proposal {
+  background: #fff3b0;            /* light yellow */
+  border: 1px solid #e7d37a;      /* subtle yellow border */
+}
+
+/* Left label box for proposal cards */
+.ass-num--proposal {
+  background: #ffe38a;            /* slightly deeper yellow */
+  border: 1px solid #e7d37a;
+}
+
+/* Small reason text under title */
+.ass-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* Right column alignment for vote/admin cluster on proposal cards */
+.ass-actions--proposal {
+  padding-top: 0;                 /* tighter vertical alignment */
+  align-items: flex-start;
+}
+
 .ass-body {
   min-width: 0;
 }
