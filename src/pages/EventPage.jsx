@@ -23,15 +23,15 @@ import "../styles/homepage.css";
 function statusMeta(event_status) {
   switch (event_status) {
     case "NOT_STARTED":
-      return { label: "대기 중", className: "status-pill--long status-waiting" };
+      return { label: "대기 중", className: "status-pill status-waiting" };
     case "IN_PROGRESS":
-      return { label: "진행 중", className: "status-pill--long status-progress" };
+      return { label: "진행 중", className: "status-pill status-progress" };
     case "PAUSED":
-      return { label: "일시정지", className: "status-pill--long status-paused" };
+      return { label: "일시정지", className: "status-pill status-paused" };
     case "FINISHED":
-      return { label: "완료", className: "status-pill--long status-finished" };
+      return { label: "완료", className: "status-pill status-finished" };
     default:
-      return { label: event_status ?? "알 수 없음", className: "status-pill--long status-default" };
+      return { label: event_status ?? "알 수 없음", className: "status-pill status-default" };
   }
 }
 
@@ -51,6 +51,8 @@ export default function EventPage() {
   const [settingOpen, setSettingOpen] = useState(false);
   const [membershipOpen, setMembershipOpen] = useState(false);
   const [statusChanging, setStatusChanging] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null); // { message, onConfirm }
+  const [composerCollapsed, setComposerCollapsed] = useState(false);
 
   // 모달이 열릴 때 다른 모달을 닫는 함수들
   const handleOpenVote = () => {
@@ -203,8 +205,30 @@ export default function EventPage() {
 
   // 이벤트 상태 변경 핸들러
   const handleStatusChange = useCallback(
-    async (newStatus) => {
+    async (newStatus, requiresConfirmation = false, confirmMessage = "") => {
       if (!eventId || !newStatus) return;
+
+      // 확인이 필요한 경우 확인 다이얼로그 표시
+      if (requiresConfirmation) {
+        setConfirmDialog({
+          message: confirmMessage || "이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?",
+          onConfirm: async () => {
+            setConfirmDialog(null);
+            setStatusChanging(true);
+            setErrMsg("");
+
+            try {
+              await eventsApi.updateEventStatus(eventId, { status: newStatus });
+              await fetchDetail();
+            } catch (err) {
+              setErrMsg(err?.message || "상태 변경에 실패했습니다.");
+            } finally {
+              setStatusChanging(false);
+            }
+          },
+        });
+        return;
+      }
 
       setStatusChanging(true);
       setErrMsg("");
@@ -221,66 +245,100 @@ export default function EventPage() {
     [eventId, fetchDetail]
   );
 
-  // 상태 변경 가능한 옵션들
-  const statusOptions = useMemo(() => {
-    if (!eventStatus) return [];
-    const options = [];
+  // 상태 변경 버튼 정보
+  const statusButtonConfig = useMemo(() => {
+    if (!eventStatus) return null;
     switch (eventStatus) {
       case "NOT_STARTED":
-        options.push({ value: "IN_PROGRESS", label: "진행 중" });
-        break;
+        return { 
+          text: "시작", 
+          nextStatus: "IN_PROGRESS", 
+          color: "green",
+          requiresConfirmation: true,
+          confirmMessage: "이벤트를 시작하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        };
       case "IN_PROGRESS":
-        options.push({ value: "PAUSED", label: "일시정지" });
-        options.push({ value: "FINISHED", label: "종료" });
-        break;
+        // IN_PROGRESS에서는 두 개의 버튼이 필요하므로 특별 처리
+        return null;
       case "PAUSED":
-        options.push({ value: "IN_PROGRESS", label: "재개" });
-        options.push({ value: "FINISHED", label: "종료" });
-        break;
+        return { 
+          text: "재개", 
+          nextStatus: "IN_PROGRESS", 
+          color: "green",
+          requiresConfirmation: false
+        };
       case "FINISHED":
-        // FINISHED는 변경 불가
-        break;
+        return null;
+      default:
+        return null;
     }
-    return options;
+  }, [eventStatus]);
+
+  // IN_PROGRESS 상태일 때의 버튼들
+  const inProgressButtons = useMemo(() => {
+    if (eventStatus !== "IN_PROGRESS") return [];
+    return [
+      { 
+        text: "일시 정지", 
+        nextStatus: "PAUSED", 
+        color: "red",
+        requiresConfirmation: false
+      },
+      { 
+        text: "종료", 
+        nextStatus: "FINISHED", 
+        color: "green",
+        requiresConfirmation: true,
+        confirmMessage: "이벤트를 종료하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+      }
+    ];
   }, [eventStatus]);
 
   return (
     <div className="event-root">
       <header className="event-topbar">
-        <div className="event-brand">Decision Maker</div>
+        <button className="event-brand" type="button" onClick={() => navigate("/home")}>
+          Decision Maker
+        </button>
 
         <div className="event-actions">
-          {isAdmin && statusOptions.length > 0 && (
-            <select
-              className="dm-select"
-              value={eventStatus}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              disabled={statusChanging}
-            >
-              <option value={eventStatus}>{st.label}</option>
-              {statusOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          )}
-          {!isAdmin && <div className={st.className}>{st.label}</div>}
-
-          {isAdmin && (
+          {isAdmin && eventStatus === "IN_PROGRESS" && (
             <>
-              <button className="dm-btn" type="button" onClick={handleOpenSetting}>
-                설정
-              </button>
-              <button className="dm-btn" type="button" onClick={handleOpenMembership}>
-                멤버십 관리
-              </button>
+              {inProgressButtons.map((btn) => (
+                <button
+                  key={btn.nextStatus}
+                  className={`dm-btn dm-btn--status dm-btn--${btn.color}`}
+                  type="button"
+                  onClick={() => handleStatusChange(btn.nextStatus, btn.requiresConfirmation, btn.confirmMessage)}
+                  disabled={statusChanging}
+                >
+                  {btn.text}
+                </button>
+              ))}
             </>
           )}
-
-          <button className="dm-btn" type="button" onClick={() => navigate("/home")}>
-            나가기
+          {isAdmin && statusButtonConfig && (
+            <button
+              className={`dm-btn dm-btn--status dm-btn--${statusButtonConfig.color}`}
+              type="button"
+              onClick={() => handleStatusChange(
+                statusButtonConfig.nextStatus, 
+                statusButtonConfig.requiresConfirmation, 
+                statusButtonConfig.confirmMessage
+              )}
+              disabled={statusChanging}
+            >
+              {statusButtonConfig.text}
+            </button>
+          )}
+          <button className="event-nav-link" type="button" onClick={handleOpenSetting}>
+            설정
           </button>
+          {isAdmin && (
+            <button className="event-nav-link" type="button" onClick={handleOpenMembership}>
+              멤버십 관리
+            </button>
+          )}
 
           {eventStatus === "IN_PROGRESS" && (
             <button className="dm-btn" type="button" onClick={handleOpenVote}>
@@ -294,20 +352,21 @@ export default function EventPage() {
         {errMsg && <div className="event-error">{errMsg}</div>}
 
         <section className="event-section">
-          <h2 className="event-section-title">기본 정보</h2>
+          <div className="event-section-head">
+            <span className={st.className}>{st.label}</span>
+          </div>
 
-          <div className="event-info-card">
-            <div className="event-info-row">
-              <div className="event-info-label">주제</div>
-              <div className="event-info-value">
+          <div className="basic-info-list">
+            <div className="basic-info-card">
+              <div className="basic-info-label">주제</div>
+              <div className="basic-info-content">
                 {loading ? <span className="event-muted">불러오는 중...</span> : (subject || "-")}
               </div>
             </div>
-            <div className="ep-divider"/>
 
-            <div className="event-info-row">
-              <div className="event-info-label">선택지</div>
-              <div className="event-info-value">
+            <div className="basic-info-card">
+              <div className="basic-info-label">선택지</div>
+              <div className="basic-info-content">
                 {loading ? (
                   <span className="event-muted">불러오는 중...</span>
                 ) : options.length === 0 ? (
@@ -326,7 +385,7 @@ export default function EventPage() {
           </div>
         </section>
 
-        <section className="event-section">
+        <section id="assumption-section" className="event-section">
           <div className="event-section-head">
             <h2 className="event-section-title">전제</h2>
             <button className="dm-btn dm-btn--sm" type="button" onClick={() => { openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null }); }} disabled={eventStatus !== "IN_PROGRESS"}>
@@ -349,7 +408,7 @@ export default function EventPage() {
           />
         </section>
         <div className='ep-divider--long'/>
-        <section className="event-section">
+        <section id="criteria-section" className="event-section">
           <div className="event-section-head">
             <h2 className="event-section-title">기준</h2>
             <button
@@ -383,20 +442,100 @@ export default function EventPage() {
         </section>
 
         <VoteResultDisplay eventId={eventId} eventStatus={eventStatus} />
+      </main>
 
+      {/* 플로팅 입력창 */}
+      {eventStatus === "IN_PROGRESS" && (
         <ProposalComposer
-          open={!!composer}
-          config={composer}
+          open={true}
+          collapsed={composerCollapsed}
+          onToggleCollapse={() => setComposerCollapsed(!composerCollapsed)}
+          config={composer || { scope: "assumption", action: "create", targetIndex: null, targetId: null }}
           content={draftContent}
           reason={draftReason}
           setContent={setDraftContent}
           setReason={setDraftReason}
           submitting={composerSubmitting}
           errorMsg={composerErr}
-          onClose={closeComposer}
-          onSubmit={submitComposer}
+          onClose={composer ? closeComposer : () => {
+            setDraftContent("");
+            setDraftReason("");
+          }}
+          onConfigChange={(newConfig) => {
+            openComposer(newConfig);
+            
+            // 특정 컴포넌트를 참조하는 경우 해당 섹션으로 스크롤 및 강조
+            if (newConfig.action !== "create" && newConfig.targetIndex !== null) {
+              const sectionId = newConfig.scope === "assumption" ? "assumption-section" : "criteria-section";
+              const itemId = newConfig.scope === "assumption" 
+                ? `assumption-${newConfig.targetIndex}`
+                : `criterion-${newConfig.targetIndex}`;
+              
+              setTimeout(() => {
+                const section = document.getElementById(sectionId);
+                const item = document.getElementById(itemId);
+                
+                if (section) {
+                  // 섹션으로 스크롤
+                  section.scrollIntoView({ behavior: "smooth", block: "center" });
+                  
+                  // 섹션 강조
+                  section.classList.add("event-section--highlighted");
+                  setTimeout(() => {
+                    section.classList.remove("event-section--highlighted");
+                  }, 2000);
+                }
+                
+                // 특정 항목 강조
+                if (item) {
+                  item.classList.add("ass-card--highlighted");
+                  setTimeout(() => {
+                    item.classList.remove("ass-card--highlighted");
+                  }, 2000);
+                }
+              }, 100);
+            } else if (newConfig.action === "comment" || newConfig.action === "conclusion") {
+              // 코멘트나 결론의 경우 기준 섹션으로 스크롤
+              const sectionId = "criteria-section";
+              const itemId = `criterion-${newConfig.targetIndex}`;
+              
+              setTimeout(() => {
+                const section = document.getElementById(sectionId);
+                const item = document.getElementById(itemId);
+                
+                if (section) {
+                  section.scrollIntoView({ behavior: "smooth", block: "center" });
+                  section.classList.add("event-section--highlighted");
+                  setTimeout(() => {
+                    section.classList.remove("event-section--highlighted");
+                  }, 2000);
+                }
+                
+                if (item) {
+                  item.classList.add("ass-card--highlighted");
+                  setTimeout(() => {
+                    item.classList.remove("ass-card--highlighted");
+                  }, 2000);
+                }
+              }, 100);
+            }
+          }}
+          assumptions={detail?.assumptions || []}
+          criteria={detail?.criteria || []}
+          onSubmit={async () => {
+            if (!composer) {
+              // composer가 없으면 전제 추가 모드로 열기
+              openComposer({ scope: "assumption", action: "create", targetIndex: null, targetId: null });
+              // 다음 틱에서 제출
+              setTimeout(() => {
+                submitComposer();
+              }, 0);
+            } else {
+              submitComposer();
+            }
+          }}
         />
-      </main>
+      )}
 
       <VoteModal
         open={voteOpen}
@@ -410,27 +549,51 @@ export default function EventPage() {
         }}
       />
 
-      {isAdmin && (
-        <>
-          <EventSettingModal
-            open={settingOpen}
-            eventId={eventId}
-            eventStatus={eventStatus}
-            onClose={() => setSettingOpen(false)}
-            onSuccess={() => {
-              fetchDetail();
-            }}
-          />
+      <EventSettingModal
+        open={settingOpen}
+        eventId={eventId}
+        eventStatus={eventStatus}
+        readOnly={!isAdmin}
+        onClose={() => setSettingOpen(false)}
+        onSuccess={() => {
+          fetchDetail();
+        }}
+      />
 
-          <MembershipManagementModal
-            open={membershipOpen}
-            eventId={eventId}
-            onClose={() => setMembershipOpen(false)}
-            onSuccess={() => {
-              fetchDetail();
-            }}
-          />
-        </>
+      {isAdmin && (
+        <MembershipManagementModal
+          open={membershipOpen}
+          eventId={eventId}
+          onClose={() => setMembershipOpen(false)}
+          onSuccess={() => {
+            fetchDetail();
+          }}
+        />
+      )}
+
+      {/* 확인 다이얼로그 */}
+      {confirmDialog && (
+        <div className="confirm-dialog-overlay" onClick={() => setConfirmDialog(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-dialog-message">{confirmDialog.message}</div>
+            <div className="confirm-dialog-actions">
+              <button
+                className="dm-btn dm-btn--outline"
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+              >
+                취소
+              </button>
+              <button
+                className="dm-btn dm-btn--danger"
+                type="button"
+                onClick={confirmDialog.onConfirm}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

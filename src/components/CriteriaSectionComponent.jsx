@@ -217,7 +217,7 @@ function renderConclusionVote(p) {
         return (
           <div key={cid ?? idx}>
             {/* 1) Main criterion box */}
-            <div className="ass-card">
+            <div id={`criterion-${idx}`} className={`ass-card ${pending.length > 0 ? 'ass-card--has-proposals' : ''}`}>
               <div className="ass-num">{idx + 1}</div>
 
               <div
@@ -240,8 +240,76 @@ function renderConclusionVote(p) {
                 }}
                 role="button"
                 tabIndex={0}
+                className="ass-body"
               >
-                <div className="ass-title">{c?.content ?? "-"}</div>
+                <div className="ass-title-row">
+                  <div className="ass-title">{c?.content ?? "-"}</div>
+                  {pending.length > 0 && (
+                    <div className="ass-actions" onClick={(e) => e.stopPropagation()}>
+                      <div className="ass-actions-row">
+                        <button
+                          type="button"
+                          className="dm-btn dm-btn--sm dm-btn--outline"
+                          onClick={() =>
+                            onOpenComposer?.({
+                              scope: "criteria",
+                              action: "conclusion",
+                              targetIndex: idx,
+                              targetId: cid,
+                            })
+                          }
+                          disabled={eventStatus !== "IN_PROGRESS"}
+                        >
+                          결론 제안
+                        </button>
+
+                        <button
+                          type="button"
+                          className="ass-action-icon"
+                          onClick={() =>
+                            onOpenComposer?.({
+                              scope: "criteria",
+                              action: "modify",
+                              targetIndex: idx,
+                              targetId: cid,
+                            })
+                          }
+                          disabled={eventStatus !== "IN_PROGRESS"}
+                          title="수정 제안"
+                          aria-label="수정 제안"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="ass-action-icon ass-action-icon--delete"
+                          onClick={() =>
+                            onOpenComposer?.({
+                              scope: "criteria",
+                              action: "delete",
+                              targetIndex: idx,
+                              targetId: cid,
+                            })
+                          }
+                          disabled={eventStatus !== "IN_PROGRESS"}
+                          title="삭제 제안"
+                          aria-label="삭제 제안"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {pending.length > 0 && (
                   <div className="ass-proposals"  onClick={(e) => e.stopPropagation()}>
@@ -277,69 +345,111 @@ function renderConclusionVote(p) {
                 )}
               </div>
 
-              <div className="ass-actions" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="dm-btn dm-btn--sm dm-btn--outline"
-                  onClick={() =>
-                    onOpenComposer?.({
-                      scope: "criteria",
-                      action: "conclusion",
-                      targetIndex: idx,
-                      targetId: cid,
-                    })
-                  }
-                  disabled={eventStatus !== "IN_PROGRESS"}
-                >
-                  결론 제안
-                </button>
+              {pending.length === 0 && (
+                <div className="ass-actions" onClick={(e) => e.stopPropagation()}>
+                  <div className="ass-actions-row">
+                    <button
+                      type="button"
+                      className="dm-btn dm-btn--sm dm-btn--outline"
+                      onClick={() =>
+                        onOpenComposer?.({
+                          scope: "criteria",
+                          action: "conclusion",
+                          targetIndex: idx,
+                          targetId: cid,
+                        })
+                      }
+                      disabled={eventStatus !== "IN_PROGRESS"}
+                    >
+                      결론 제안
+                    </button>
 
-                <button
-                  type="button"
-                  className="dm-btn dm-btn--sm dm-btn--outline"
-                  onClick={() =>
-                    onOpenComposer?.({
-                      scope: "criteria",
-                      action: "modify",
-                      targetIndex: idx,
-                      targetId: cid,
-                    })
-                  }
-                  disabled={eventStatus !== "IN_PROGRESS"}
-                >
-                  수정 제안
-                </button>
+                    <button
+                      type="button"
+                      className="ass-action-icon"
+                      onClick={() =>
+                        onOpenComposer?.({
+                          scope: "criteria",
+                          action: "modify",
+                          targetIndex: idx,
+                          targetId: cid,
+                        })
+                      }
+                      disabled={eventStatus !== "IN_PROGRESS"}
+                      title="수정 제안"
+                      aria-label="수정 제안"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
 
-                <button
-                  type="button"
-                  className="dm-btn dm-btn--sm dm-btn--outline"
-                  onClick={() =>
-                    onOpenComposer?.({
-                      scope: "criteria",
-                      action: "delete",
-                      targetIndex: idx,
-                      targetId: cid,
-                    })
-                  }
-                  disabled={eventStatus !== "IN_PROGRESS"}
-                >
-                  삭제 제안
-                </button>
-              </div>
+                    <button
+                      type="button"
+                      className="ass-action-icon ass-action-icon--delete"
+                      onClick={() =>
+                        onOpenComposer?.({
+                          scope: "criteria",
+                          action: "delete",
+                          targetIndex: idx,
+                          targetId: cid,
+                        })
+                      }
+                      disabled={eventStatus !== "IN_PROGRESS"}
+                      title="삭제 제안"
+                      aria-label="삭제 제안"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 2) Comments box */}
             <div className="cr-comments-box">
-              <button
-                type="button"
-                className="cr-comments-toggle"
-                onClick={() => toggleComments(cid)}
-                aria-expanded={commentsOpen}
-              >
-                <span className="cr-caret">{commentsOpen ? "▼" : "▶"}</span>
-                <span className="ass-title">코멘트</span>
-                <span className="cr-comments-count">{comments.length > 0 ? `(${comments.length})` : ""}</span>
-              </button>
+              <div className="cr-comments-toggle-wrapper">
+                <div className="cr-comments-toggle-left">
+                  <button
+                    type="button"
+                    className="cr-comments-toggle"
+                    onClick={() => toggleComments(cid)}
+                    aria-expanded={commentsOpen}
+                  >
+                    <span className={`cr-caret ${commentsOpen ? 'cr-caret--open' : ''}`}>▶</span>
+                    <span className="ass-title">코멘트</span>
+                    <span className="cr-comments-count">{comments.length > 0 ? `(${comments.length})` : ""}</span>
+                  </button>
+                </div>
+                <div className="cr-comments-toggle-right">
+                  <button
+                    type="button"
+                    className="cr-comment-add-btn"
+                    onClick={() =>
+                      onOpenComposer?.({
+                        scope: "criteria",
+                        action: "comment",
+                        targetIndex: idx,
+                        targetId: cid,
+                      })
+                    }
+                    disabled={eventStatus !== "IN_PROGRESS"}
+                    title="코멘트 작성"
+                    aria-label="코멘트 작성"
+                  >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  </button>
+                </div>
+              </div>
 
               {commentsOpen && (
                 <div className="cr-comments-body">
@@ -411,7 +521,6 @@ function renderConclusionVote(p) {
             <div className="ass-num">-</div>
 
             <div className="ass-body">
-              <div className="ass-title">제안된 기준입니다.</div>
               <div className="ass-proposals">
                 <div className="ass-proposal-row">
                   <div className="ass-tag">추가</div>

@@ -531,7 +531,7 @@ textarea:disabled {
 }
 
 .modal-body {
-  padding: var(--spacing-8);
+  padding: 0 var(--spacing-8) var(--spacing-8) var(--spacing-8);
   overflow-y: auto;
   flex: 1;
   min-height: 0;

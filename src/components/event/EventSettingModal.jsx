@@ -23,9 +23,9 @@ function FieldRow({ label, children }) {
   );
 }
 
-function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit = true }) {
+function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit = true, readOnly = false }) {
   const filteredItems = items.filter((item) => item.content !== null);
-  const canAdd = filteredItems.length < max && canEdit;
+  const canAdd = filteredItems.length < max && canEdit && !readOnly;
 
   function updateAt(filteredIdx, newContent) {
     let currentIdx = 0;
@@ -64,7 +64,7 @@ function ListEditor({ label, items, setItems, max, placeholder, min = 0, canEdit
     <FieldRow label={label}>
       <div className="ec-list">
         {filteredItems.map((item, i) => {
-          const canDelete = filteredItems.length > min && canEdit;
+          const canDelete = filteredItems.length > min && canEdit && !readOnly;
           return (
             <div key={item.id || `new-${i}`} className="ec-list-row">
               <input
@@ -149,13 +149,15 @@ function Toggle({ checked, onChange, disabled = false }) {
  * @param {string} eventStatus - 이벤트 상태
  * @param {Function} onClose - 모달 닫기 핸들러
  * @param {Function} onSuccess - 설정 수정 성공 핸들러
+ * @param {boolean} readOnly - 읽기 전용 모드 (일반 사용자용)
  */
-export default function EventSettingModal({ open, eventId, eventStatus, onClose, onSuccess }) {
+export default function EventSettingModal({ open, eventId, eventStatus, onClose, onSuccess, readOnly = false }) {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // 기본 정보
   const [subject, setSubject] = useState("");
@@ -180,9 +182,9 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
   const [entranceCode, setEntranceCode] = useState("");
 
   // 수정 가능 여부
-  const canEditBasicInfo = eventStatus === "NOT_STARTED";
-  const canEditMaxMembership = eventStatus !== "FINISHED";
-  const canEditPolicies = eventStatus !== "FINISHED";
+  const canEditBasicInfo = !readOnly && eventStatus === "NOT_STARTED";
+  const canEditMaxMembership = !readOnly && eventStatus !== "FINISHED";
+  const canEditPolicies = !readOnly && eventStatus !== "FINISHED";
 
   // 설정 데이터 불러오기
   useEffect(() => {
@@ -301,6 +303,8 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
       await eventsApi.updateEvent(eventId, payload);
       setSuccessMsg("수정이 완료되었습니다.");
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 2000);
       onSuccess?.();
       // Don't close the modal - let user continue editing if needed
     } catch (err) {
@@ -341,16 +345,15 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
         {!loadingData && (
           <>
+            {readOnly && (
+              <div className="ec-error" style={{ marginBottom: "var(--spacing-4)" }}>
+                이 설정은 관리자만 수정할 수 있습니다. 현재 설정을 확인할 수 있습니다.
+              </div>
+            )}
             {successMsg && <SuccessDisplay message={successMsg} onDismiss={() => setSuccessMsg("")} />}
             {errorMsg && <div className="ec-error">{errorMsg}</div>}
 
-            {!canEditBasicInfo && (
-              <div className="ec-error" style={{ background: "rgba(245, 158, 11, 0.1)", borderLeftColor: "var(--color-warning)" }}>
-                기본 정보는 이벤트가 시작되기 전(NOT_STARTED)에만 수정할 수 있습니다.
-              </div>
-            )}
-
-            {eventStatus === "FINISHED" && (
+            {!readOnly && eventStatus === "FINISHED" && (
               <div className="ec-error" style={{ background: "rgba(245, 158, 11, 0.1)", borderLeftColor: "var(--color-warning)" }}>
                 이벤트가 종료되어 일부 설정은 수정할 수 없습니다.
               </div>
@@ -358,6 +361,12 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
 
             <div className="ec-section">
               <div className="ec-section-title">기본 정보</div>
+
+              {!readOnly && !canEditBasicInfo && (
+                <div className="ec-error" style={{ background: "rgba(245, 158, 11, 0.1)", borderLeftColor: "var(--color-warning)", marginTop: "var(--spacing-2)" }}>
+                  기본 정보는 이벤트가 시작되기 전(NOT_STARTED)에만 수정할 수 있습니다.
+                </div>
+              )}
 
               <FieldRow label="주제">
                 <input
@@ -377,6 +386,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                 placeholder=""
                 min={1}
                 canEdit={canEditBasicInfo}
+                readOnly={readOnly}
               />
               <div className="ec-spacer" />
 
@@ -388,6 +398,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                 placeholder=""
                 min={0}
                 canEdit={canEditBasicInfo}
+                readOnly={readOnly}
               />
               <div className="ec-spacer" />
 
@@ -399,6 +410,7 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
                 placeholder=""
                 min={0}
                 canEdit={canEditBasicInfo}
+                readOnly={readOnly}
               />
               <div className="ec-spacer" />
 
@@ -598,19 +610,21 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
               </FieldRow>
             </div>
 
-            <div className="ec-footer">
-              <button type="button" className="dm-btn dm-btn--outline" onClick={onClose}>
-                취소
-              </button>
-              <button
-                type="button"
-                className="dm-btn ec-create-btn"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? "수정 중..." : "수정하기"}
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="ec-footer">
+                <button type="button" className="dm-btn dm-btn--outline" onClick={onClose}>
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="dm-btn ec-create-btn"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "수정 중..." : "수정하기"}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -618,6 +632,12 @@ export default function EventSettingModal({ open, eventId, eventStatus, onClose,
       {showToast && (
         <div className="toast-message">
           복사되었습니다.
+        </div>
+      )}
+
+      {showSuccessToast && (
+        <div className="toast-message">
+          수정이 완료되었습니다.
         </div>
       )}
     </ModalShell>

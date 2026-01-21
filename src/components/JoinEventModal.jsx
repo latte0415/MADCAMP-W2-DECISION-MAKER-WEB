@@ -76,7 +76,7 @@ export default function JoinEventModal({ open, onClose, onJoined }) {
           ×
         </button>
 
-        <div className="join-title">코드를 입력해주세요</div>
+        <div className="join-title">코드로 참여하기</div>
 
         <input
           className="join-input"
@@ -86,7 +86,7 @@ export default function JoinEventModal({ open, onClose, onJoined }) {
             setErrMsg("");
             setOkMsg("");
           }}
-          placeholder="Code:"
+          placeholder="입장 코드를 입력해주세요."
           inputMode="text"
           autoFocus
         />

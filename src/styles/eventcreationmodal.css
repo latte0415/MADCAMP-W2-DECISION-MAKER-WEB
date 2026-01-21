@@ -99,7 +99,7 @@
 }
 
 .ec-section {
-  margin-bottom: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
 }
 
 .ec-section:last-child {
@@ -379,9 +379,18 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: var(--spacing-3);
   margin-top: var(--spacing-6);
   padding-top: var(--spacing-4);
   border-top: 1px solid var(--color-border-light);
+}
+
+.ec-footer .dm-btn {
+  min-width: 120px;
+  height: 48px;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  padding: 0 var(--spacing-6);
 }
 
 .ec-create-btn {

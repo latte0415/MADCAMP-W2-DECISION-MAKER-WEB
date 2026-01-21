@@ -30,6 +30,8 @@ function scopeLabel(scope) {
 
 export default function ProposalComposer({
   open,
+  collapsed = false,
+  onToggleCollapse,
   config, // { scope, action, targetIndex, targetId }
   content,
   reason,
@@ -39,91 +41,199 @@ export default function ProposalComposer({
   errorMsg,
   onClose,
   onSubmit,
+  onConfigChange, // config 변경 핸들러
+  assumptions = [], // 전제 목록
+  criteria = [], // 기준 목록
 }) {
-  if (!open || !config) return null;
+  if (!open) return null;
+  
+  // config가 없으면 기본값 사용
+  const effectiveConfig = config || { scope: "assumption", action: "create", targetIndex: null, targetId: null };
 
-  const showContent = config.action !== "delete";     // delete hides content
-  const showReason  = config.action === "create" || config.action === "modify" || config.action === "delete";
+  const showContent = effectiveConfig.action !== "delete";     // delete hides content
+  const showReason  = effectiveConfig.action === "create" || effectiveConfig.action === "modify" || effectiveConfig.action === "delete";
 
   
 const contentPlaceholder =
-  config.action === "comment"
+  effectiveConfig.action === "comment"
     ? "코멘트를 입력하세요."
-    : config.action === "conclusion"
+    : effectiveConfig.action === "conclusion"
     ? "결론을 입력하세요."
     : "작성할 내용을 입력하세요.";
 
 const reasonPlaceholder = "이유를 입력하세요.";
 
-  const pills = useMemo(() => {
-    const p1 = scopeLabel(config.scope);
-    const p2 = config.action === "create" ? "-" : String((config.targetIndex ?? 0) + 1);
-    const p3 = actionLabel(config.action);
-    return [p1, p2, p3];
-  }, [config]);
+  // 드롭다운 옵션 생성
+  const scopeOptions = [
+    { value: "assumption", label: "전제" },
+    { value: "criteria", label: "기준" },
+  ];
+
+  const actionOptions = useMemo(() => {
+    const baseActions = [
+      { value: "create", label: "추가" },
+      { value: "modify", label: "수정" },
+      { value: "delete", label: "삭제" },
+    ];
+    
+    if (effectiveConfig.scope === "criteria") {
+      return [
+        ...baseActions,
+        { value: "comment", label: "코멘트" },
+        { value: "conclusion", label: "결론" },
+      ];
+    }
+    
+    return baseActions;
+  }, [effectiveConfig.scope]);
+
+  const targetOptions = useMemo(() => {
+    const items = effectiveConfig.scope === "assumption" ? assumptions : criteria;
+    return items.map((item, index) => ({
+      value: index,
+      label: `${index + 1}번`,
+      id: item.id,
+    }));
+  }, [effectiveConfig.scope, assumptions, criteria]);
+
+  const handleScopeChange = (e) => {
+    const newScope = e.target.value;
+    onConfigChange?.({
+      ...effectiveConfig,
+      scope: newScope,
+      targetIndex: null,
+      targetId: null,
+    });
+  };
+
+  const handleActionChange = (e) => {
+    const newAction = e.target.value;
+    const items = effectiveConfig.scope === "assumption" ? assumptions : criteria;
+    const firstItemId = items.length > 0 ? items[0].id : null;
+    
+    onConfigChange?.({
+      ...effectiveConfig,
+      action: newAction,
+      targetIndex: newAction === "create" ? null : (effectiveConfig.targetIndex ?? 0),
+      targetId: newAction === "create" ? null : (effectiveConfig.targetId ?? firstItemId),
+    });
+  };
+
+  const handleTargetChange = (e) => {
+    const selectedIndex = parseInt(e.target.value);
+    const selectedTarget = targetOptions[selectedIndex];
+    onConfigChange?.({
+      ...effectiveConfig,
+      targetIndex: selectedIndex,
+      targetId: selectedTarget?.id || null,
+    });
+  };
 
   const canSubmit = useMemo(() => {
     if (submitting) return false;
 
-    if (config.action === "comment" || config.action === "conclusion") {
+    if (effectiveConfig.action === "comment" || effectiveConfig.action === "conclusion") {
       return content.trim().length > 0;
     }
 
-    if (config.action === "delete") {
+    if (effectiveConfig.action === "delete") {
       return reason.trim().length > 0;
     }
 
     // create/modify
     return content.trim().length > 0 && reason.trim().length > 0;
-  }, [submitting, config.action, content, reason]);
+  }, [submitting, effectiveConfig.action, content, reason]);
 
   return (
-    <div className="pc-wrap" role="region" aria-label="Proposal Composer">
+    <div className={`pc-wrap ${collapsed ? 'pc-wrap--collapsed' : ''}`} role="region" aria-label="Proposal Composer">
       <div className="pc-top">
-        <button type="button" className="dm-btn dm-btn--ghost pc-close" onClick={onClose} aria-label="Close">
-          ×
+        <button 
+          type="button" 
+          className={`dm-btn dm-btn--ghost pc-toggle ${collapsed ? 'pc-toggle--collapsed' : ''}`}
+          onClick={onToggleCollapse} 
+          aria-label={collapsed ? "펼치기" : "접기"}
+        >
+          ▶
         </button>
 
-        <div className="pc-pills">
-          {pills.map((p, i) => (
-            <span key={i} className="pc-pill">
-              {p}
-            </span>
-          ))}
+        <div className="pc-selects">
+          <select
+            className="pc-select"
+            value={effectiveConfig.scope}
+            onChange={handleScopeChange}
+            disabled={submitting}
+          >
+            {scopeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="pc-select"
+            value={effectiveConfig.action}
+            onChange={handleActionChange}
+            disabled={submitting}
+          >
+            {actionOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="pc-select"
+            value={effectiveConfig.action === "create" ? "" : (effectiveConfig.targetIndex ?? 0)}
+            onChange={handleTargetChange}
+            disabled={submitting || effectiveConfig.action === "create"}
+          >
+            {effectiveConfig.action === "create" && <option value="">-</option>}
+            {targetOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {errorMsg && <div className="pc-error">{errorMsg}</div>}
+      {!collapsed && (
+        <>
+          {errorMsg && <div className="pc-error">{errorMsg}</div>}
 
-      <div className="pc-body">
-        <div className="pc-inputs">
-          {showContent && (
-            <textarea
-              className="pc-textarea"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={contentPlaceholder}
-              rows={2}
-            />
-          )}
+          <div className="pc-body">
+            <div className="pc-inputs">
+              {showContent && (
+                <textarea
+                  className="pc-textarea"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={contentPlaceholder}
+                  rows={2}
+                />
+              )}
 
-          {showReason && (
-            <textarea
-              className="pc-textarea"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={reasonPlaceholder}
-              rows={2}
-            />
-           )}
-        </div>
+              {showReason && (
+                <textarea
+                  className="pc-textarea"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={reasonPlaceholder}
+                  rows={2}
+                />
+               )}
+            </div>
 
-        <div className="pc-actions">
-          <button type="button" className="dm-btn pc-submit" disabled={!canSubmit} onClick={onSubmit}>
-            {submitting ? "제안 중..." : "제안"}
-          </button>
-        </div>
-      </div>
+            <div className="pc-actions">
+              <button type="button" className="dm-btn pc-submit" disabled={!canSubmit} onClick={onSubmit}>
+                {submitting ? "제안 중..." : "제안"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
