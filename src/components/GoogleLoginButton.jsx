@@ -4,10 +4,14 @@ function loadGoogleScript() {
   return new Promise((resolve, reject) => {
     if (window.google?.accounts?.id) return resolve();
 
-    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    const existing = document.querySelector(
+      'script[src="https://accounts.google.com/gsi/client"]'
+    );
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Failed to load Google script")));
+      existing.addEventListener("error", () =>
+        reject(new Error("Failed to load Google script"))
+      );
       return;
     }
 
@@ -23,7 +27,7 @@ function loadGoogleScript() {
 
 export default function GoogleLoginButton({ onCredential, onError }) {
   const [ready, setReady] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const overlayRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -38,8 +42,27 @@ export default function GoogleLoginButton({ onCredential, onError }) {
 
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: (resp) => onCredential?.(resp.credential),
+          callback: (resp) => {
+            try {
+              onCredential?.(resp.credential); // ID token (JWT)
+            } catch (e) {
+              onError?.(e);
+            }
+          },
         });
+
+        // Render the real Google button into our overlay container
+        if (overlayRef.current) {
+          overlayRef.current.innerHTML = "";
+
+          // Optional: match width to your button width for better hitbox alignment
+          const width = overlayRef.current.parentElement?.offsetWidth;
+          window.google.accounts.id.renderButton(overlayRef.current, {
+            theme: "outline",
+            size: "large",
+            ...(width ? { width } : {}),
+          });
+        }
 
         setReady(true);
       } catch (e) {
@@ -52,41 +75,36 @@ export default function GoogleLoginButton({ onCredential, onError }) {
     };
   }, [onCredential, onError]);
 
-  const handleClick = () => {
-    if (!ready || loading) return;
-    setLoading(true);
-    
-    try {
-      // Use Google's OAuth2 code flow
-      const client = window.google.accounts.oauth2.initCodeClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scope: 'email profile',
-        ux_mode: 'popup',
-        callback: (response) => {
-          if (response.code) {
-            // The backend should exchange this code for an ID token
-            // For now, we'll use the code directly if the backend expects it
-            // Otherwise, we need to exchange it server-side
-            onCredential?.(response.code);
-          }
-          setLoading(false);
-        },
-      });
-      client.requestCode();
-    } catch (e) {
-      onError?.(e);
-      setLoading(false);
-    }
-  };
-
   return (
     <button
       type="button"
       className="google-login-btn"
-      onClick={handleClick}
-      disabled={!ready || loading}
+      aria-disabled={!ready}
+      // Do NOT use disabled=... here, because it can prevent the overlay iframe from receiving clicks
+      style={{ position: "relative" }}
     >
-      <svg className="google-logo" width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+      {/* Invisible real Google button overlay (captures the click) */}
+      <div
+        ref={overlayRef}
+        className="gis-overlay"
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0,
+          pointerEvents: ready ? "auto" : "none",
+          zIndex: 2,
+        }}
+      />
+
+      {/* Your original visuals underneath */}
+      <svg
+        className="google-logo"
+        width="18"
+        height="18"
+        viewBox="0 0 18 18"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ position: "relative", zIndex: 1, pointerEvents: "none" }}
+      >
         <g fill="none" fillRule="evenodd">
           <path
             d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
@@ -106,8 +124,12 @@ export default function GoogleLoginButton({ onCredential, onError }) {
           />
         </g>
       </svg>
-      <span className="google-login-text">
-        {loading ? "로그인 중..." : "Google 계정으로 계속하기"}
+
+      <span
+        className="google-login-text"
+        style={{ position: "relative", zIndex: 1, pointerEvents: "none" }}
+      >
+        {ready ? "Google 계정으로 계속하기" : "로딩 중..."}
       </span>
     </button>
   );
