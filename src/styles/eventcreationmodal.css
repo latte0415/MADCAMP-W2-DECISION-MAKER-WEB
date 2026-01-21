@@ -169,7 +169,7 @@
 }
 
 .ec-input::placeholder {
-  color: var(--color-text-tertiary);
+  color: rgba(15, 23, 42, 0.35);
 }
 
 .ec-input:disabled {

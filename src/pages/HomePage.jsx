@@ -72,6 +72,7 @@ export default function HomePage() {
 
   const [createOpen, setCreateOpen] = useState(false); 
   const [joinOpen, setJoinOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   // 모달이 열릴 때 다른 모달을 닫는 함수들
   const handleOpenCreate = () => {
@@ -225,21 +226,46 @@ export default function HomePage() {
                   <div className="event-left">
                     <div className="event-title-row">
                       {adminBadge && <span className={adminBadge.className}>{adminBadge.label}</span>}
-                      {membershipBadge && (
-                        <span className={membershipBadge.className}>{membershipBadge.label}</span>
-                      )}
                       <h3 className="event-title">{ev.decision_subject}</h3>
                     </div>
-
-                    <div className="event-sub">
-                      <div>참가 인원: {ev.participant_count}명</div>
-                      <div>관리자: {ev.admin_name}</div>
+                    <div className="event-info">
+                      <div className="event-info-item">
+                        진행 상태: <span className={st.className}>{st.label}</span>
+                      </div>
+                      <div className="event-info-item">관리자: {ev.admin_name}</div>
+                      <div className="event-info-item">참가 인원: {ev.participant_count}명</div>
                     </div>
                   </div>
 
                   <div className="event-right">
-                    <div className={st.className}>{st.label}</div>
-                    <div className="event-code">{ev.entrance_code}</div>
+                    <div 
+                      className="event-code"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          await navigator.clipboard.writeText(ev.entrance_code);
+                          setShowToast(true);
+                          setTimeout(() => setShowToast(false), 2000);
+                        } catch (err) {
+                          console.error('복사 실패:', err);
+                        }
+                      }}
+                      title="클릭하여 복사"
+                    >
+                      {ev.entrance_code}
+                      <svg 
+                        className="event-code-icon" 
+                        width="14" 
+                        height="14" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </div>
                   </div>
                 </button>
               );
@@ -285,6 +311,12 @@ export default function HomePage() {
           }
         }}
       />
+
+      {showToast && (
+        <div className="toast-message">
+          복사되었습니다.
+        </div>
+      )}
     </div>
   );
 }

@@ -128,7 +128,7 @@
 }
 
 .pc-textarea::placeholder {
-  color: var(--color-text-tertiary);
+  color: rgba(15, 23, 42, 0.35);
   font-weight: var(--font-weight-regular);
 }
 

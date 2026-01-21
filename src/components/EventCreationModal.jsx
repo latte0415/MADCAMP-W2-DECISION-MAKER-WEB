@@ -153,10 +153,14 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
     // Common sense: need at least 2 non-empty options
     const optionsOk = o.length >= 2 && o.length <= MAX_OPTIONS;
 
+    // 입장 코드 중복 확인 완료되어야 함
+    const codeChecked = codeCheck?.is_available === true;
+
     return (
       !loading &&
       subjectOk &&
       entranceCodeValid &&
+      codeChecked &&
       optionsOk &&
       maxOk &&
       percentOk &&
@@ -165,6 +169,7 @@ export default function EventCreationModal({ open, onClose, onCreated }) {
   }, [
     subject,
     entranceCodeValid,
+    codeCheck,
     options,
     maxMembership,
     conclusionApprovalPercent,

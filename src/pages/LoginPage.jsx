@@ -77,11 +77,12 @@ export default function LoginPage() {
 
         <div className='login-stack'>
           <h1 className="login-title">Decision Maker</h1>
+          <p className="login-subtitle">조금 더 합리적인 VS 게임, 그런데 이제 투표를 곁들인</p>
           <form onSubmit={onSubmit} className="login-form">
             <input
               className="login-input"
               type="email"
-              placeholder="E-mail:"
+              placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -90,23 +91,25 @@ export default function LoginPage() {
             <input
               className="login-input"
               type="password"
-              placeholder="PW:"
+              placeholder="PW"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               autoComplete="current-password"
               disabled={loading || bootstrapping}
             />
-            <button className="login-primary-btn" type="submit" disabled={!canSubmit}>
-              {loading ? "로그인 중..." : "시작하기"}
-            </button>
-            <div className="login-links-row">
-              <Link className="login-link" to="/signup">
-                회원가입
-              </Link>
-
-              <Link className="login-link" to="/find-password">
-                비밀번호 찾기
-              </Link>
+            <div className="login-primary-container">
+              <button className="login-primary-btn" type="submit" disabled={!canSubmit}>
+                {loading ? "로그인 중..." : "시작하기"}
+              </button>
+              <div className="login-links-container">
+                <Link className="login-link" to="/signup">
+                  회원가입
+                </Link>
+                <span className="login-link-separator">/</span>
+                <Link className="login-link" to="/find-password">
+                  비밀번호 찾기
+                </Link>
+              </div>
             </div>
             <div className="login-divider" />
 
