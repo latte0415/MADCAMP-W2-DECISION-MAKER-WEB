@@ -51,20 +51,27 @@ export default function GoogleLoginButton({ onCredential, onError }) {
           },
         });
 
-        // Render the real Google button into our overlay container
-        if (overlayRef.current) {
+        // Wait for the overlay container to be available
+        const renderButton = () => {
+          if (!overlayRef.current) {
+            setTimeout(renderButton, 50);
+            return;
+          }
+
           overlayRef.current.innerHTML = "";
 
-          // Optional: match width to your button width for better hitbox alignment
-          const width = overlayRef.current.parentElement?.offsetWidth;
+          // Match width to parent button
+          const width = overlayRef.current.parentElement?.offsetWidth || 300;
           window.google.accounts.id.renderButton(overlayRef.current, {
             theme: "outline",
             size: "large",
-            ...(width ? { width } : {}),
+            width: width,
           });
-        }
 
-        setReady(true);
+          setReady(true);
+        };
+
+        renderButton();
       } catch (e) {
         onError?.(e);
       }
@@ -89,10 +96,16 @@ export default function GoogleLoginButton({ onCredential, onError }) {
         className="gis-overlay"
         style={{
           position: "absolute",
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100%",
+          height: "100%",
           opacity: 0,
           pointerEvents: ready ? "auto" : "none",
-          zIndex: 2,
+          zIndex: 10,
+          cursor: ready ? "pointer" : "default",
         }}
       />
 
