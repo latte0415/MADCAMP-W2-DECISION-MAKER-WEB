@@ -95,6 +95,9 @@ export default function HomePage() {
   // ----------------------------
   const overviewInFlightRef = useRef(false);
   const overviewHydratedRef = useRef(false);
+  const OVERVIEW_SPINNER_DELAY_MS = 200;
+  const overviewSpinnerTimerRef = useRef(null);
+
 
   const fetchOverview = useCallback(
     async ({ foreground = false } = {}) => {
@@ -103,30 +106,40 @@ export default function HomePage() {
 
       overviewInFlightRef.current = true;
 
-      if (foreground) {
-        setOverviewLoading(true);
+      if (foreground) {a
         setOverviewErr("");
         setOverview(null);
         overviewHydratedRef.current = false;
+
+        // delayed spinner (prevents flicker)
+        clearTimeout(overviewSpinnerTimerRef.current);
+        overviewSpinnerTimerRef.current = setTimeout(() => {
+          setOverviewLoading(true);
+        }, OVERVIEW_SPINNER_DELAY_MS);
       }
 
       try {
         const data = await eventsApi.getEventOverview(overviewEventId);
         setOverview(data);
-        setOverviewErr(""); // success clears error
+        setOverviewErr("");
         overviewHydratedRef.current = true;
       } catch (err) {
-        // Avoid noisy error changes during background polling if we already have data
         if (!overviewHydratedRef.current) {
           setOverviewErr(err?.message || "이벤트 오버뷰를 불러오지 못했습니다.");
         }
       } finally {
         overviewInFlightRef.current = false;
-        if (foreground) setOverviewLoading(false);
+
+        if (foreground) {
+          clearTimeout(overviewSpinnerTimerRef.current);
+          overviewSpinnerTimerRef.current = null;
+          setOverviewLoading(false);
+        }
       }
     },
     [overviewEventId]
   );
+
 
   // Foreground fetch exactly when modal opens / target changes
   useEffect(() => {
@@ -156,6 +169,8 @@ export default function HomePage() {
     setOverviewErr("");
     overviewHydratedRef.current = false;
     overviewInFlightRef.current = false;
+    clearTimeout(overviewSpinnerTimerRef.current);
+    overviewSpinnerTimerRef.current = null;
   }, []);
 
   const enterEvent = useCallback(() => {

@@ -353,7 +353,7 @@ export default function CriteriaSection({
             key={p?.id ?? `cr-create-${i}`}
             className="ass-card ass-card--proposal"
           >
-            <div className="ass-num ass-num--proposal">제안</div>
+            <div className="ass-num ass-num--proposal">추가</div>
 
             <div className="ass-body">
               <div className="ass-title">{p?.proposal_content ?? "-"}</div>
