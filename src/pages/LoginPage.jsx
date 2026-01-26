@@ -101,7 +101,7 @@ export default function LoginPage() {
               <button className="login-primary-btn" type="submit" disabled={!canSubmit}>
                 {loading ? "로그인 중..." : "시작하기"}
               </button>
-              <div className="login-links-container">
+              {/* <div className="login-links-container">
                 <Link className="login-link" to="/signup">
                   회원가입
                 </Link>
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 <Link className="login-link" to="/find-password">
                   비밀번호 찾기
                 </Link>
-              </div>
+              </div> */}
             </div>
             <div className="login-divider" />
 
